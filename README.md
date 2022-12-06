@@ -79,7 +79,7 @@ Keep the above mention dataset in the data folder that give you following struct
 After setup the required package run the following experiment. The experiment is based on combination of parameters passing through `argparse` and `config.yaml`. An example is given below. Ignore gpu statement if you don't have gpu.
 
 ```
-python train.py --root_dir YOUR_ROOT_DIR \
+python project/train.py --root_dir YOUR_ROOT_DIR \
     --dataset_dir YOUR_ROOT_DIR/data/ \
     --model_name unet \
     --epochs 10 \
@@ -93,7 +93,7 @@ python train.py --root_dir YOUR_ROOT_DIR \
 Run following command for test the model on test dataset.
 
 ```
-python test.py \
+python project/test.py \
     --dataset_dir YOUR_ROOT_DIR/data/ \
     --model_name unet \
     --load_model_name MODEL_CHECKPOINT_NAME \
@@ -107,7 +107,7 @@ python test.py \
 Run following command for evaluate the model without any mask.
 
 ```
-python test.py \
+python project/test.py \
     --dataset_dir YOUR_ROOT_DIR/data/ \
     --model_name unet \
     --load_model_name MODEL_CHECKPOINT_NAME \
@@ -121,7 +121,7 @@ python test.py \
 Run following command for evaluate the model on a video.
 
 ```
-python test.py \
+python project/test.py \
     --dataset_dir YOUR_ROOT_DIR/data/ \
     --model_name unet \
     --load_model_name MODEL_CHECKPOINT_NAME \
