@@ -58,6 +58,20 @@ Change the working directory to project root directory. Use Conda/Pip to create 
 pip install -r requirements.txt
 ```
 
+Keep the above mention dataset in the data folder that give you following structure:
+
+```
+--data
+    --image
+        --um_000000.png
+        --um_000001.png
+            ..
+    --gt_image
+        --um_road_000000.png
+        --um_road_000002.png
+            ..
+```
+
 ## **Experiment**
 
 After setup the required package run the following experiment. The experiment is based on combination of parameters passing through `argparse` and `config.yaml`. An example is given below. Ignore gpu statement if you don't have gpu.
