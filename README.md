@@ -2,7 +2,7 @@
 
 ## **Introduction**
 
-Road segmentation is crucial for autonomous driving and sophisticated driver assistance systems to comprehend the driving environment. Recent years have seen significant advancements in road segmentation thanks to the advent of deep learning. Inaccurate road boundaries and lighting fluctuations like shadows and overexposed zones are still issues. In this paper, we focus on the topic of visual road classification, in which we are given a picture and asked to label each pixel as containing either a road or a non-road. We tackle this task using FapNet [?], a recently suggested convolutional neural network architecture. To improve its performance, the proposed approach makes use of a NAP augmentation module. The experimental results show that the suggested method achieves higher segmentation accuracy than the state-of-the-art methods on the KITTI road detection benchmark datasets.
+Road segmentation is crucial for autonomous driving and sophisticated driver assistance systems to comprehend the driving environment. Recent years have seen significant advancements in road segmentation thanks to the advent of deep learning. Inaccurate road boundaries and lighting fluctuations like shadows and overexposed zones are still issues. In this paper, we focus on the topic of visual road classification, in which we are given a picture and asked to label each pixel as containing either a road or a non-road. We tackle this task using FapNet, a recently suggested convolutional neural network architecture. To improve its performance, the proposed approach makes use of a NAP augmentation module. The experimental results show that the suggested method achieves higher segmentation accuracy than the state-of-the-art methods on the KITTI road detection benchmark datasets.
 
 ## **Dataset**
 
@@ -74,6 +74,8 @@ Keep the above mention dataset in the data folder that give you following struct
 
 ## **Experiment**
 
+### **Training**
+
 After setup the required package run the following experiment. The experiment is based on combination of parameters passing through `argparse` and `config.yaml`. An example is given below. Ignore gpu statement if you don't have gpu.
 
 ```
@@ -86,9 +88,9 @@ python train.py --root_dir YOUR_ROOT_DIR \
     --experiment cfr \
 ```
 
-## **Testing**
+### **Testing**
 
-### **Test the model with mask**
+#### **Test on single image**
 
 ```
 python test.py \
@@ -100,7 +102,20 @@ python test.py \
     --evaluation False \
 ```
 
-### **Test the model without mask**
+#### **Test on multiple image**
+
+```
+python test.py \
+    --dataset_dir YOUR_ROOT_DIR/data/ \
+    --model_name unet \
+    --load_model_name MODEL_CHECKPOINT_NAME \
+    --experiment cfr \
+    --gpu YOUR_GPU_NUMBER \
+    --evaluation False \
+```
+
+### **Evaluation**
+
 
 Run following model for evaluating train model on test dataset.
 
@@ -114,7 +129,21 @@ python test.py \
     --evaluation True \
 ```
 
-### **Test the model on video**
+#### **Evaluation on single image**
+
+Run following model for evaluating train model on test dataset.
+
+```
+python test.py \
+    --dataset_dir YOUR_ROOT_DIR/data/ \
+    --model_name unet \
+    --load_model_name MODEL_CHECKPOINT_NAME \
+    --experiment cfr \
+    --gpu YOUR_GPU_NUMBER \
+    --evaluation True \
+```
+
+### **Evaluation on Video**
 
 Run following model for evaluating train model on test dataset.
 
