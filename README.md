@@ -90,19 +90,7 @@ python train.py --root_dir YOUR_ROOT_DIR \
 
 ### **Testing**
 
-#### **Test on single image**
-
-```
-python test.py \
-    --dataset_dir YOUR_ROOT_DIR/data/ \
-    --model_name unet \
-    --load_model_name MODEL_CHECKPOINT_NAME \
-    --experiment cfr \
-    --gpu YOUR_GPU_NUMBER \
-    --evaluation False \
-```
-
-#### **Test on multiple image**
+Run following command for test the model on test dataset.
 
 ```
 python test.py \
@@ -116,22 +104,7 @@ python test.py \
 
 ### **Evaluation**
 
-
-Run following model for evaluating train model on test dataset.
-
-```
-python test.py \
-    --dataset_dir YOUR_ROOT_DIR/data/ \
-    --model_name unet \
-    --load_model_name MODEL_CHECKPOINT_NAME \
-    --experiment cfr \
-    --gpu YOUR_GPU_NUMBER \
-    --evaluation True \
-```
-
-#### **Evaluation on single image**
-
-Run following model for evaluating train model on test dataset.
+Run following command for evaluate the model without any mask.
 
 ```
 python test.py \
@@ -145,7 +118,7 @@ python test.py \
 
 ### **Evaluation on Video**
 
-Run following model for evaluating train model on test dataset.
+Run following command for evaluate the model on a video.
 
 ```
 python test.py \
