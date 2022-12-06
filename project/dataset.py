@@ -120,6 +120,16 @@ def save_csv(dictionary, config, name):
     df.to_csv((config['dataset_dir']+name), index=False, header=True)
 
 
+def video_to_frame(config):
+    vidcap = cv2.VideoCapture(config["video_path"])
+    success,image = vidcap.read()
+    count = 0
+    while success:
+        cv2.imwrite(config['dataset_dir'] + '/testing' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
+        success,image = vidcap.read() 
+        count += 1
+
+
 def data_path_split(config):
     """
     Summary:
@@ -163,6 +173,10 @@ def eval_data_path_split(config):
     
     data_path = config["dataset_dir"]
     images = []
+    
+    # video is provided then it will generate frame from video
+    if config["video_path"] != 'None':
+        video_to_frame(config)
 
     image_path = data_path + "/testing"
     image_names = os.listdir(image_path)
@@ -229,7 +243,7 @@ def save_patch_idx(path, patch_size=256, stride=8, test=None, patch_class_balanc
     patch_idx = []
 
     # image column traverse
-    for i in range(patch_height):
+    for i in range(patch_height+1):
         # get the start and end row index
         s_row = i*stride
         e_row = s_row+patch_size
@@ -241,7 +255,7 @@ def save_patch_idx(path, patch_size=256, stride=8, test=None, patch_class_balanc
         if e_row <= img.shape[0]:
 
             # image row traverse
-            for j in range(patch_weight):
+            for j in range(patch_weight+1):
                 # get the start and end column index
                 start = (j*stride)
                 end = start+patch_size
@@ -256,7 +270,7 @@ def save_patch_idx(path, patch_size=256, stride=8, test=None, patch_class_balanc
                         tmp)  # find class percentage
 
                     # take all patch for test images
-                    if patch_class_balance or test == 'test':
+                    if not patch_class_balance or test == 'test':
                         patch_idx.append([s_row, e_row, start, end])
 
                     # store patch image indices based on class percentage
@@ -724,7 +738,7 @@ def get_test_dataloader(config):
         test_masks = test_dir.masks.values
         test_idx = None
 
-    print("test Example : {}".format(len(test_features)))
+    print("test/evaluation Example : {}".format(len(test_features)))
 
     test_dataset = MyDataset(test_features, test_masks,
                              in_channels=config['in_channels'], patchify=config['patchify'],

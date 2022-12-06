@@ -1,17 +1,13 @@
 import os
 import argparse
+import time
 from metrics import *
 from dataset import get_test_dataloader
 from loss import *
 from tensorflow import keras
 from tensorflow.keras.models import load_model
-from utils import show_predictions, get_config_yaml, create_paths, patch_show_predictions
+from utils import show_predictions, get_config_yaml, create_paths, patch_show_predictions, frame_to_video
 
-
-# setup gpu
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 # Parsing variable
 # ----------------------------------------------------------------------------------------------
@@ -22,10 +18,9 @@ parser.add_argument("--load_model_name")
 parser.add_argument("--plot_single", type=bool)
 parser.add_argument("--index", type=int)
 parser.add_argument("--experiment")
-parser.add_argument("--patchify")
-parser.add_argument("--patch_size")
 parser.add_argument("--gpu")
 parser.add_argument("--evaluation")
+parser.add_argument("--video_path")
 args = parser.parse_args()
 
 if args.plot_single == 'True':
@@ -33,10 +28,23 @@ if args.plot_single == 'True':
 else:
     args.plot_single = False
 
+t0 = time.time()
 # Set up test configaration
 # ----------------------------------------------------------------------------------------------
 config = get_config_yaml('project/config.yaml', vars(args))
-create_paths(config, test = True)
+
+if config["evaluation"]:
+    create_paths(config, eval = True)
+else:
+    create_paths(config, test = True)
+
+
+
+# setup gpu
+# ----------------------------------------------------------------------------------------------
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = config["gpu"]
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 # Multiple GPU Setup
 # ----------------------------------------------------------------------------------------------
@@ -58,16 +66,27 @@ test_dataset = get_test_dataloader(config)
 
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
-print("Saving test predictions...")
+print("Saving test/evaluation predictions...")
 if config['patchify']:
     print("call patch_show_predictions")
     patch_show_predictions(test_dataset, model, config)
 else:
     show_predictions(test_dataset, model, config)
 
+
 # Evaluation Score
 # ----------------------------------------------------------------------------------------------
-metrics = list(get_metrics(config).values())
-adam = keras.optimizers.Adam(learning_rate=config['learning_rate'])
-model.compile(optimizer=adam, loss=focal_loss(), metrics=metrics)
-model.evaluate(test_dataset)
+if not config['evaluation']:
+    metrics = list(get_metrics(config).values())
+    adam = keras.optimizers.Adam(learning_rate=config['learning_rate'])
+    model.compile(optimizer=adam, loss=focal_loss(), metrics=metrics)
+    model.evaluate(test_dataset)
+
+# Frame to video
+# ----------------------------------------------------------------------------------------------
+if config["video_path"] != 'None':
+    fname = config['dataset_dir'] + 'prediction.avi'
+    frame_to_video(config, fname, fps=30)
+
+
+print("training time sec: {}".format((time.time()-t0)))

@@ -9,10 +9,10 @@ width: 400
 # ----------------------------------------------------------------------------------------------
 # mnet = fapnet, unet, ex_mnet*, dncnn, u2net, vnet, unet++, sm_unet, sm_linknet, sm_fpn, sm_pspnet*, kuc_vnet, kuc_unet3pp, kuc_r2unet,# kuc_unetpp*, kuc_restunet, kuc_tensnet*, kuc_swinnet, kuc_u2net,| kuc_attunet, ad_unet, transformer
 model_name: fapnet
-batch_size: 8   #64
+batch_size: 32   #64
 epochs: 500
 learning_rate: !!float 3e-4
-val_plot_epoch: 1
+val_plot_epoch: 10
 augment: False
 transfer_lr: False
 gpu: !!str 3
@@ -22,7 +22,7 @@ trainOn: all  # ignore it
 # ----------------------------------------------------------------------------------------------
 # regular/cls_balance/patchify/patchify_WOC
 # cfr = regular, cfr_cb = cls_balance, phr = patchify, phr_cb = patchify_WOC
-experiment: phr_cb_full
+experiment: test_per
 
 # Patchify (phr & phr_cb experiment)
 # ----------------------------------------------------------------------------------------------
@@ -58,9 +58,10 @@ patience: 300 # required for early_stopping, if accuracy does not change for 500
 # Evaluation
 # ----------------------------------------------------------------------------------------------
 #load_model_name : m.hdf5
-load_model_name: afapnet_ex_phr_cb_ep_500_22-Nov-22.hdf5
+load_model_name: fapnet_ex_phr_cb_32_1000_ep_1000_02-Dec-22.hdf5
 load_model_dir: None
-evaluation: False
+evaluation: True
+video_path: None    #/home/mdsamiul/github_project/road_segmentation/data/video.mp4
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
 plot_single: False # if True, then only index x_test image will plot

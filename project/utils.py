@@ -4,6 +4,7 @@ import math
 import yaml
 import glob
 import random
+import cv2
 import numpy as np
 import pandas as pd
 import pathlib
@@ -14,6 +15,7 @@ import earthpy.spatial as es
 from tensorflow import keras
 from datetime import datetime
 import matplotlib.pyplot as plt
+import moviepy.video.io.ImageSequenceClip
 from dataset import read_img, transform_data
 
 
@@ -277,7 +279,7 @@ def patch_show_predictions(dataset, model, config):
             display({"image": feature_img,      # change in the key "image" will have to change in the display
                      #"mask": pred_full_label,
                  "Prediction": pred_full_label
-                 }, i, config['prediction_test_dir'], score, config['experiment'], config["evaluation"])
+                 }, i, config['prediction_eval_dir'], score, config['experiment'], config["evaluation"])
         else:
             display({"image": feature_img,      # change in the key "image" will have to change in the display
                     "Mask": np.argmax([mask], axis=3)[0],
@@ -367,7 +369,7 @@ def set_gpu(gpus):
 # ----------------------------------------------------------------------------------------------
 
 
-def create_paths(config, test=False):
+def create_paths(config, test=False, eval=False):
     """
     Summary:
         creating paths for train and test if not exists
@@ -379,6 +381,11 @@ def create_paths(config, test=False):
     """
     if test:
         pathlib.Path(config['prediction_test_dir']).mkdir(
+            parents=True, exist_ok=True)
+    if eval:
+        pathlib.Path(config["dataset_dir"] + "/testing").mkdir(
+            parents=True, exist_ok=True)
+        pathlib.Path(config['prediction_eval_dir']).mkdir(
             parents=True, exist_ok=True)
     else:
         pathlib.Path(config['csv_log_dir']
@@ -454,6 +461,7 @@ def get_config_yaml(path, args):
 
     # Create Evaluation directory
     config['prediction_test_dir'] = config['root_dir'] + '/prediction/'+ config['model_name'] + '/test/' + config['experiment'] + '/'
+    config['prediction_eval_dir'] = config['root_dir'] + '/prediction/'+ config['model_name'] + '/eval/' + config['experiment'] + '/'
     config['prediction_val_dir'] = config['root_dir'] + '/prediction/' + config['model_name'] + '/validation/' + config['experiment'] + '/'
 
     config['visualization_dir'] = config['root_dir']+'/visualization/'
@@ -599,3 +607,30 @@ def find_best_worst():
 
     df = pd.DataFrame(scores)
     df.to_csv("predic_score.csv")
+    
+    
+# def frame_to_video(config, fname, framerate=30):
+#     img_array = []
+#     for filename in glob.glob( config['prediction_eval_dir'] + '*.jpg'):
+#         img = cv2.imread(filename)
+#         height, width, layers = img.shape
+#         size = (width, height)
+#         img_array.append(img)
+
+#     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+#     out = cv2.VideoWriter(fname,fourcc, framerate, size)
+    
+#     for i in range(len(img_array)):
+#         out.write(img_array[i])
+#     out.release()
+    
+def frame_to_video(config, fname, fps=30):
+    
+    image_folder=config['prediction_eval_dir']
+    image_names = os.listdir(image_folder)
+    image_names = sorted(image_names)
+    image_files = []
+    for i in image_names:
+        image_files.append(image_folder + "/" + i)
+    clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
+    clip.write_videofile(fname)
