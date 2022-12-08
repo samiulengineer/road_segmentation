@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--dataset_dir")
 parser.add_argument("--model_name")
 parser.add_argument("--load_model_name")
-parser.add_argument("--plot_single", type=bool)
+parser.add_argument("--plot_single")
 parser.add_argument("--index", type=int)
 parser.add_argument("--experiment")
 parser.add_argument("--gpu")
@@ -27,6 +27,11 @@ if args.plot_single == 'True':
     args.plot_single = True
 else:
     args.plot_single = False
+    
+if args.evaluation == 'True':
+    args.evaluation = True
+else:
+    args.evaluation = False
 
 t0 = time.time()
 # Set up test configaration

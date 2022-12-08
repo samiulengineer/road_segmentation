@@ -58,7 +58,7 @@ Change the working directory to project root directory. Use Conda/Pip to create 
 pip install -r requirements.txt
 ```
 
-Keep the above mention dataset in the data folder that give you following structure:
+Keep the above mention dataset in the data folder that give you following structure. Please do not change the directory name `image` and `gt_image`.
 
 ```
 --data
@@ -76,59 +76,69 @@ Keep the above mention dataset in the data folder that give you following struct
 
 ### **Training**
 
-After setup the required package run the following experiment. The experiment is based on combination of parameters passing through `argparse` and `config.yaml`. An example is given below. Ignore gpu statement if you don't have gpu.
+After setup the required package run the following experiment. The experiment is based on combination of parameters passing through `argparse` and `config.yaml`.
+
+1. An example is given below. Ignore gpu statement if you don't have gpu.
+2. During training some new directories will be created; `csv_logger`, `logs`, `model` and `prediction`.
+3. You can check the prediction of validation images inside the `prediction > YOUR_MODELNAME > validation`.
+4. You must paste the dataset in the `data` directory inside your `root directory`
 
 ```
-python project/train.py --root_dir YOUR_ROOT_DIR \
+python project/train.py  \
+    --root_dir YOUR_ROOT_DIR \
     --dataset_dir YOUR_ROOT_DIR/data/ \
-    --model_name unet \
+    --model_name fapnet \
     --epochs 10 \
     --batch_size 3 \
     --gpu YOUR_GPU_NUMBER \
-    --experiment cfr \
+    --experiment road_seg \
 ```
 
 ### **Testing**
 
-Run following command for test the model on test dataset.
+Thus, model checkpoint will be saved in the model directory. This checkpoint is required for testing purpose. Run following command to test the model on test dataset.
+
+1. You can check the prediction of test images inside the `prediction > YOUR_MODELNAME > test`.
+2.
 
 ```
 python project/test.py \
     --dataset_dir YOUR_ROOT_DIR/data/ \
-    --model_name unet \
+    --model_name fapnet \
     --load_model_name MODEL_CHECKPOINT_NAME \
-    --experiment cfr \
+    --experiment road_seg \
     --gpu YOUR_GPU_NUMBER \
     --evaluation False \
 ```
 
-### **Evaluation**
+### **Evaluation on Image**
 
-Run following command for evaluate the model without any mask.
+If you have the images without mask, we need to do data pre-preprocessing before passing to the model checkpoint. In that case, run the following command to evaluate the model without any mask.
+
+1. You can check the prediction of test images inside the `prediction > YOUR_MODELNAME > eval`.
 
 ```
 python project/test.py \
-    --dataset_dir YOUR_ROOT_DIR/data/ \
-    --model_name unet \
+    --dataset_dir YOUR_IMAGE_DIR/ \
+    --model_name fapnet \
     --load_model_name MODEL_CHECKPOINT_NAME \
-    --experiment cfr \
+    --experiment road_seg \
     --gpu YOUR_GPU_NUMBER \
     --evaluation True \
 ```
 
 ### **Evaluation on Video**
 
-Run following command for evaluate the model on a video.
+Our model also can predict the road from video data. Run following command for evaluate the model on a video.
 
 ```
 python project/test.py \
-    --dataset_dir YOUR_ROOT_DIR/data/ \
-    --model_name unet \
+    --video_path PATH_TO_YOUR_VIDEO \
+    --model_name fapnet \
     --load_model_name MODEL_CHECKPOINT_NAME \
-    --experiment cfr \
+    --experiment road_seg \
     --gpu YOUR_GPU_NUMBER \
     --evaluation True \
-    --video_path PATH_TO_YOUR_VIDEO \
 ```
 
 ## **Results**
@@ -145,4 +155,10 @@ Comparing prediction on evalution dataset.
 
 The following figures are the overview of the important .py files in this repo.
 
-![Alternate text](/readme/road_seg_code_pipeline.drawio.png)
+![Alternate text](/readme/full_code.png)
+
+![Alternate text](/readme/datasetpy.png)
+
+![Alternate text](/readme/utils.png)
+
+![Alternate text](/readme/visualization.png)

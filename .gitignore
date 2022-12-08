@@ -169,6 +169,10 @@ prediction
 visualization
 output
 archive
+csv_logger
+logs
+model
+
 
 
 # /project/processing/

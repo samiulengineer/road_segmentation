@@ -1,5 +1,4 @@
 import os
-import cv2
 import json
 import math
 import yaml
@@ -14,6 +13,7 @@ import earthpy.spatial as es
 from datetime import datetime
 import matplotlib.pyplot as plt
 import moviepy.video.io.ImageSequenceClip
+
 from dataset import read_img, transform_data
 
 
@@ -311,8 +311,9 @@ def create_paths(config, test=False, eval=False):
         pathlib.Path(config['prediction_test_dir']).mkdir(
             parents=True, exist_ok=True)
     if eval:
-        pathlib.Path(config["dataset_dir"] + "/testing").mkdir(
-            parents=True, exist_ok=True)
+        if config["video_path"] != 'None':
+            pathlib.Path(config["dataset_dir"] + "/video_frame").mkdir(
+                parents=True, exist_ok=True)
         pathlib.Path(config['prediction_eval_dir']).mkdir(
             parents=True, exist_ok=True)
     else:
@@ -418,20 +419,20 @@ def frame_to_video(config, fname, fps=30):
     clip.write_videofile(fname)
 
 
-def video_to_frame(config):
-    """
-    Summary:
-        create frames from video
-    Arguments:
-        config (dict): configuration dictionary
-    Return:
-        frames
-    """
+# def video_to_frame(config):
+#     """
+#     Summary:
+#         create frames from video
+#     Arguments:
+#         config (dict): configuration dictionary
+#     Return:
+#         frames
+#     """
     
-    vidcap = cv2.VideoCapture(config["video_path"])
-    success,image = vidcap.read()
-    count = 0
-    while success:
-        cv2.imwrite(config['dataset_dir'] + '/testing' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
-        success,image = vidcap.read() 
-        count += 1
+#     vidcap = cv2.VideoCapture(config["video_path"])
+#     success,image = vidcap.read()
+#     count = 0
+#     while success:
+#         cv2.imwrite(config['dataset_dir'] + '/video_frame' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
+#         success,image = vidcap.read() 
+#         count += 1

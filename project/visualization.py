@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from utils import get_config_yaml
 from matplotlib import pyplot as plt
+from dataset import read_img
 
 # setup gpu
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -146,6 +147,42 @@ def plot_curve(models, metrics, fname):
     plt.show()
 
 
+def display_all(data):
+    """
+    Summary:
+        save all images into single figure
+    Arguments:
+        data : data file holding images path
+        directory (str) : path to save images
+    Return:
+        save images figure into directory
+    """
+    
+    pathlib.Path((config['visualization_dir']+'display')).mkdir(parents = True, exist_ok = True)
+
+    for i in range(len(data)):
+        image = read_img(data.feature_ids.values[i])
+        mask = read_img(data.masks.values[i], label=True)
+        id = data.feature_ids.values[i].split("/")[-1]
+        display_list = {
+                     "image":image,
+                     "label":mask}
+
+
+        plt.figure(figsize=(12, 8))
+        title = list(display_list.keys())
+
+        for i in range(len(display_list)):
+            plt.subplot(1, len(display_list), i+1)
+            plt.title(title[i])
+            plt.imshow((display_list[title[i]]))
+            plt.axis('off')
+
+        prediction_name = "img_id_{}.png".format(id) # create file name to save
+        plt.savefig(os.path.join((config['visualization_dir']+'display'), prediction_name), bbox_inches='tight', dpi=800)
+        plt.clf()
+        plt.cla()
+        plt.close()
     
 
 if __name__ == '__main__':
@@ -167,10 +204,15 @@ if __name__ == '__main__':
     # metrics result plot
     models = ['Fapnet', 'UNet', 'UNet++', 'VNet', 'U2Net', 'DNCNN']
     metrics = {
-        'MIOU':      [0.94, 0.76, 0.78, 0.77, 0.61, 0.76],
-        'F-1 score': [0.97, 0.91, 0.91, 0.87, 0.93, 0.91],
-        'Precision': [0.74, 0.70, 0.87, 0.66, 0.50, 0.68],
-        'Recall':    [0.88, 0.74, 0.63, 0.71, 0.80, 0.74]
+        'MIOU':      [0.96, 0.76, 0.78, 0.77, 0.61, 0.76],
+        'F-1 score': [0.98, 0.91, 0.91, 0.87, 0.93, 0.91],
+        'Precision': [0.98, 0.70, 0.87, 0.66, 0.50, 0.68],
+        'Recall':    [0.98, 0.74, 0.63, 0.71, 0.80, 0.74]
     }
     fname = config['visualization_dir'] + 'metrics_result.jpg'
     plot_curve(models, metrics, fname)
+    
+    
+    # display all
+    data = pd.read_csv('/home/mdsamiul/github_project/road_segmentation/data/valid.csv')
+    display_all(data)

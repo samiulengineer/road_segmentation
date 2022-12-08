@@ -1,7 +1,6 @@
 import os
 import math
 import json
-import rasterio
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -10,7 +9,7 @@ import matplotlib
 import cv2
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical, Sequence
-from utils import video_to_frame
+# from utils import video_to_frame
 matplotlib.use('Agg')
 
 
@@ -103,6 +102,25 @@ def save_csv(dictionary, config, name):
     df.to_csv((config['dataset_dir']+name), index=False, header=True)
 
 
+def video_to_frame(config):
+    """
+    Summary:
+        create frames from video
+    Arguments:
+        config (dict): configuration dictionary
+    Return:
+        frames
+    """
+    
+    vidcap = cv2.VideoCapture(config["video_path"])
+    success,image = vidcap.read()
+    count = 0
+    while success:
+        cv2.imwrite(config['dataset_dir'] + '/video_frame' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
+        success,image = vidcap.read() 
+        count += 1
+        
+
 def data_path_split(config):
     """
     Summary:
@@ -158,8 +176,11 @@ def eval_data_path_split(config):
     # video is provided then it will generate frame from video
     if config["video_path"] != 'None':
         video_to_frame(config)
-
-    image_path = data_path + "/testing"
+        image_path = data_path + "/video_frame"
+        
+    else:
+        image_path = data_path
+        
     image_names = os.listdir(image_path)
     image_names = sorted(image_names)
     
@@ -695,6 +716,8 @@ def get_test_dataloader(config):
     else:
         var_list = ["test_dir", "p_test_dir"]
         patch_name = "test_patch_phr_cb_"
+        
+    print(var_list)
         
     if not (os.path.exists(config[var_list[0]])):
         if config["evaluation"]:
