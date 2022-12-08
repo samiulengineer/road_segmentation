@@ -60,7 +60,7 @@ patience: 300 # required for early_stopping, if accuracy does not change for 500
 #load_model_name : m.hdf5
 load_model_name: fapnet_ex_phr_cb_32_1000_ep_1000_02-Dec-22.hdf5
 load_model_dir: None
-evaluation: False
+evaluation: True
 video_path: None    #/home/mdsamiul/github_project/road_segmentation/data/video.mp4
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
