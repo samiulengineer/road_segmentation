@@ -2,7 +2,7 @@
 
 ## **Introduction**
 
-Road segmentation is crucial for autonomous driving and sophisticated driver assistance systems to comprehend the driving environment. Recent years have seen significant advancements in road segmentation thanks to the advent of deep learning. Inaccurate road boundaries and lighting fluctuations like shadows and overexposed zones are still issues. In this paper, we focus on the topic of visual road classification, in which we are given a picture and asked to label each pixel as containing either a road or a non-road. We tackle this task using FapNet, a recently suggested convolutional neural network architecture. To improve its performance, the proposed approach makes use of a NAP augmentation module. The experimental results show that the suggested method achieves higher segmentation accuracy than the state-of-the-art methods on the KITTI road detection benchmark datasets.
+Road segmentation is crucial for autonomous driving and sophisticated driver assistance systems to comprehend the driving environment. Recent years have seen significant advancements in road segmentation thanks to the advent of deep learning. Inaccurate road boundaries and lighting fluctuations like shadows and overexposed zones are still issues. In this project, we focus on the topic of visual road classification, in which we are given a picture and asked to label each pixel as containing either a road or a non-road. We tackle this task using FAPNET, a recently suggested convolutional neural network architecture. To improve its performance, the proposed approach makes use of a NAP augmentation module. The experimental results show that the suggested method achieves higher segmentation accuracy than the state-of-the-art methods on the KITTI road detection benchmark datasets.
 
 ## **Dataset**
 
@@ -80,7 +80,7 @@ After setup the required package run the following experiment. The experiment is
 
 1. An example is given below. Ignore gpu statement if you don't have gpu.
 2. During training some new directories will be created; `csv_logger`, `logs`, `model` and `prediction`.
-3. You can check the prediction of validation images inside the `prediction > YOUR_MODELNAME > validation`.
+3. You can check the prediction of validation images inside the `prediction > YOUR_MODELNAME > validation > experiment`.
 4. You must paste the dataset in the `data` directory inside your `root directory`
 
 ```
@@ -98,8 +98,8 @@ python project/train.py  \
 
 Thus, model checkpoint will be saved in the model directory. This checkpoint is required for testing purpose. Run following command to test the model on test dataset.
 
-1. You can check the prediction of test images inside the `prediction > YOUR_MODELNAME > test`.
-2.
+1. You can check the prediction of test images inside the `prediction > YOUR_MODELNAME > test > experiment`.
+2. During training dataset will be divided as training (80%), validation (10%), test (10%)
 
 ```
 python project/test.py \
@@ -115,7 +115,7 @@ python project/test.py \
 
 If you have the images without mask, we need to do data pre-preprocessing before passing to the model checkpoint. In that case, run the following command to evaluate the model without any mask.
 
-1. You can check the prediction of test images inside the `prediction > YOUR_MODELNAME > eval`.
+1. You can check the prediction of test images inside the `prediction > YOUR_MODELNAME > eval > experiment`.
 
 ```
 python project/test.py \
