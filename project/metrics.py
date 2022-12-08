@@ -29,88 +29,6 @@ class MyMeanIOU(tf.keras.metrics.MeanIoU):
         return super().update_state(tf.argmax(y_true, axis=3), tf.argmax(y_pred, axis=3), sample_weight)
 
 
-# Keras categorical accuracy
-# ----------------------------------------------------------------------------------------------
-
-def cat_acc(y_true, y_pred):
-    '''
-    Summary:
-        This functions get the categorical accuracy
-    Arguments:
-        y_true (float32): list of true label
-        y_pred (float32): list of predicted label
-    Return:
-        Categorical accuracy
-    '''
-    return keras.metrics.categorical_accuracy(y_true, y_pred)
-
-
-# Custom dice coefficient metric
-# ----------------------------------------------------------------------------------------------
-
-def dice_coef(y_true, y_pred, smooth=1):
-    '''
-    Summary:
-        This functions get dice coefficient metric
-    Arguments:
-        y_true (float32): true label
-        y_pred (float32): predicted label
-        smooth (int): smoothness
-    Return:
-        dice coefficient metric
-    '''
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-
-
-def dice_coef_score(y_true, y_pred):
-    return dice_coef(y_true, y_pred)
-
-
-# Keras AUC metric
-# ----------------------------------------------------------------------------------------------
-
-def auc():
-    return tf.keras.metrics.AUC(num_thresholds=3)
-
-
-# Custom jaccard score
-# ----------------------------------------------------------------------------------------------
-
-def jaccard_score(y_true, y_pred, smooth=1):
-    '''
-    Summary:
-        This functions get Jaccard score
-    Arguments:
-        y_true (float32): numpy.ndarray of true label
-        y_pred (float32): numpy.ndarray of predicted label
-        smooth (int): smoothness
-    Return:
-        Jaccard score
-    '''
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    sum_ = K.sum(K.abs(y_true) + K.abs(y_pred), axis=-1)
-    jac = (intersection + smooth) / (sum_ - intersection + smooth)
-
-    return (jac) * smooth + tf.keras.losses.binary_crossentropy(y_true, y_pred)
-
-# FP
-# def fp():
-#     return tf.keras.metrics.FalsePositives().result().numpy() + 10
-
-# def tn():
-#     return tf.keras.metrics.TrueNegatives()
-
-
-# FPR
-# def FPR():
-#     fp = tf.keras.metrics.FalsePositives().result().numpy()
-#     tn = tf.keras.metrics.TrueNegatives().result().numpy()
-#     res = (fp+10) / (fp + tn + 10)
-    
-#     return res
 # Metrics
 # ----------------------------------------------------------------------------------------------
 
@@ -127,12 +45,7 @@ def get_metrics(config):
     m = MyMeanIOU(config['num_classes'])
     return {
         'my_mean_iou': m,
-        'f1_score': tfa.metrics.F1Score(num_classes=2, average="micro", threshold=0.9),    #sm.metrics.f1_score,
+        'f1_score': tfa.metrics.F1Score(num_classes=2, average="micro", threshold=0.9),
         'precision': sm.metrics.precision,
         'recall': sm.metrics.recall
-        # 'FPR': fp()
-        #'dice_coef_score': dice_coef_score
-        # 'cat_acc':cat_acc # reduce mean_iou
     }
-    
-#metrics = ['acc']

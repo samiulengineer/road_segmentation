@@ -11,7 +11,6 @@ from tensorflow.keras.models import load_model
 import tensorflow_addons as tfa
 
 tf.config.optimizer.set_jit("True")
-# mixed_precision.set_global_policy('mixed_float16')
 
 
 # Parsing variable ctrl + /
@@ -71,7 +70,6 @@ adam = tfa.optimizers.AdamW(
 
 # Loss Function
 # ----------------------------------------------------------------------------------------------
-#loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 custom_obj['loss'] = focal_loss()
 

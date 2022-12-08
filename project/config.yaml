@@ -7,7 +7,7 @@ width: 400
 
 # Training
 # ----------------------------------------------------------------------------------------------
-# mnet = fapnet, unet, ex_mnet*, dncnn, u2net, vnet, unet++, sm_unet, sm_linknet, sm_fpn, sm_pspnet*, kuc_vnet, kuc_unet3pp, kuc_r2unet,# kuc_unetpp*, kuc_restunet, kuc_tensnet*, kuc_swinnet, kuc_u2net,| kuc_attunet, ad_unet, transformer
+# mnet = fapnet, unet, ex_mnet*, dncnn, u2net, vnet, unet++, sm_unet, sm_linknet, sm_fpn, sm_pspnet*, kuc_vnet, kuc_unet3pp, kuc_r2unet,# kuc_unetpp*, 'kuc_restunet', kuc_tensnet*, 'kuc_swinnet', kuc_u2net, kuc_attunet, ad_unet, transformer
 model_name: fapnet
 batch_size: 32   #64
 epochs: 500
@@ -22,7 +22,7 @@ trainOn: all  # ignore it
 # ----------------------------------------------------------------------------------------------
 # regular/cls_balance/patchify/patchify_WOC
 # cfr = regular, cfr_cb = cls_balance, phr = patchify, phr_cb = patchify_WOC
-experiment: test_per
+experiment: phr_cb
 
 # Patchify (phr & phr_cb experiment)
 # ----------------------------------------------------------------------------------------------

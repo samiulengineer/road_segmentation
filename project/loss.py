@@ -43,21 +43,3 @@ def focal_loss(alpha=0.25, gamma=2):
         return tf.reduce_mean(loss)
 
     return loss
-
-
-def bce_jaccard_loss(y_true, y_pred, smooth=1):
-    '''
-    Summary:
-        This functions get Jaccard loss commonly referred to as the intersection-over-union loss
-    Arguments:
-        y_true (float32): numpy.ndarray of true label
-        y_pred (float32): numpy.ndarray of predicted label
-        smooth (int): smoothness
-    Return:
-        IOU loss or Jaccard loss
-    '''
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    sum_ = K.sum(K.abs(y_true) + K.abs(y_pred), axis=-1)
-    jac = (intersection + smooth) / (sum_ - intersection + smooth)
-
-    return (1 - jac) * smooth + tf.keras.losses.binary_crossentropy(y_true, y_pred)

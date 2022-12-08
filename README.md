@@ -133,4 +133,16 @@ python project/test.py \
 
 ## **Results**
 
+Prediction on evalution dataset.
+
 ![Alternate text](/readme/prediction.gif)
+
+Comparing prediction on evalution dataset.
+
+![Alternate text](/readme/compared_result.png)
+
+## **Overview of the .py files**
+
+The following figures are the overview of the important .py files in this repo.
+
+![Alternate text](/readme/road_seg_code_pipeline.drawio.png)

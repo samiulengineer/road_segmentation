@@ -1,18 +1,16 @@
 import os
+import cv2
 import json
 import math
 import yaml
-import glob
 import random
-import cv2
-import numpy as np
-import pandas as pd
 import pathlib
 from loss import *
-import tensorflow as tfb
+import numpy as np
+import pandas as pd
 import earthpy.plot as ep
-import earthpy.spatial as es
 from tensorflow import keras
+import earthpy.spatial as es
 from datetime import datetime
 import matplotlib.pyplot as plt
 import moviepy.video.io.ImageSequenceClip
@@ -66,7 +64,6 @@ class SelectCallbacks(keras.callbacks.Callback):
         """
         if (epoch % self.config['val_plot_epoch'] == 0):  # every after certain epochs the model will predict mask
             # save image/images with their mask, pred_mask and accuracy
-            #show_predictions(self.val_dataset, self.model, self.config, True)
             val_show_predictions(self.val_dataset, self.model, self.config)
 
     def get_callbacks(self, val_dataset, model):
@@ -105,23 +102,6 @@ class SelectCallbacks(keras.callbacks.Callback):
 
         return self.callbacks
 
-# Prepare masks
-# ----------------------------------------------------------------------------------------------
-
-
-def create_mask(mask, pred_mask):
-    """
-    Summary:
-        apply argmax on mask and pred_mask class dimension
-    Arguments:
-        mask (ndarray): image labels/ masks
-        pred_mask (ndarray): prediction labels/ masks
-    Return:
-        return mask and pred_mask after argmax
-    """
-    mask = np.argmax(mask, axis=3)
-    pred_mask = np.argmax(pred_mask, axis=3)
-    return mask, pred_mask
 
 # Sub-ploting and save
 # ----------------------------------------------------------------------------------------------
@@ -184,55 +164,23 @@ def display(display_list, idx, directory, score, exp, evaluation=False):
     plt.cla()
     plt.close()
 
-# Save all plot figures
-# ----------------------------------------------------------------------------------------------
-def show_predictions(dataset, model, config, val=False):
-    """
-    Summary: 
-        save image/images with their mask, pred_mask and accuracy
-    Arguments:
-        dataset (object): MyDataset class object
-        model (object): keras.Model class object
-        config (dict): configuration dictionary
-        val (bool): for validation plot save
-    Output:
-        save predicted image/images
-    """
-    # get the directory for validation or test
-    if val:
-        directory = config['prediction_val_dir']
-    else:
-        directory = config['prediction_test_dir']
-
-    # save single image after prediction from dataset
-    if config['plot_single']:
-        feature, mask, idx = dataset.get_random_data(config['index'])
-        data = [(feature, mask)]
-    else:
-        data = dataset
-        idx = 0
-
-    for feature, mask in data:  # save all image prediction in the dataset
-        prediction = model.predict_on_batch(feature)
-        mask, pred_mask = create_mask(mask, prediction)
-        for i in range(len(feature)):  # save single image prediction in the batch
-            m = keras.metrics.MeanIoU(num_classes=config['num_classes'])
-            m.update_state(mask[i], pred_mask[i])
-            score = m.result().numpy()
-
-            display({"image": feature[i],   # change in the key "image" will have to change in the display
-                     "Mask": mask[i],
-                     "Prediction (miou_{:.4f})".format(score): pred_mask[i]
-                     }, idx, directory, score, config['experiment'])
-            idx += 1
-
 # Combine patch images and save
 # ----------------------------------------------------------------------------------------------
 
 # plot single will not work here
 def patch_show_predictions(dataset, model, config):
-    # predict patch images and merge together
+    """
+    Summary:
+        predict patch images and merge together during test and evaluation
+    Arguments:
+        dataset (object): MyDataset class object
+        model (object): keras.Model class object
+        config (dict): configuration dictionary
+    Return:
+        merged patch image
+    """
     
+    # predict patch images and merge together
     if config["evaluation"]:
         var_list = ["eval_dir", "p_eval_dir"]
     else:
@@ -290,7 +238,16 @@ def patch_show_predictions(dataset, model, config):
 # validation full image plot
 # ----------------------------------------------------------------------------------------------
 def val_show_predictions(dataset, model, config):
-    
+    """
+    Summary:
+        predict patch images and merge together during training
+    Arguments:
+        dataset (object): MyDataset class object
+        model (object): keras.Model class object
+        config (dict): configuration dictionary
+    Return:
+        merged patch image
+    """
     var_list = ["valid_dir", "p_valid_dir"]
 
     with open(config[var_list[1]], 'r') as j:  # opening the json file
@@ -335,35 +292,6 @@ def val_show_predictions(dataset, model, config):
             "Prediction (miou_{:.4f})".format(score): pred_full_label 
             }, indexNum, config['prediction_val_dir'], score, config['experiment'])
 
-
-
-# GPU setting
-# ----------------------------------------------------------------------------------------------
-def set_gpu(gpus):
-    """
-    Summary:
-        setting multi-GPUs or single-GPU strategy for training
-    Arguments:
-        gpus (str): comma separated str variable i.e. "0,1,2"
-    Return:
-        gpu strategy object
-    """
-    gpus = gpus.split(",")
-    if len(gpus) > 1:
-        print("MirroredStrategy Enable")
-        GPUS = []
-        for i in range(len(gpus)):
-            GPUS.append("GPU:{}".format(gpus[i]))
-        strategy = tf.distribute.MirroredStrategy(GPUS)
-    else:
-        print("OneDeviceStrategy Enable")
-        GPUS = []
-        for i in range(len(gpus)):
-            GPUS.append("GPU:{}".format(gpus[i]))
-        strategy = tf.distribute.OneDeviceStrategy(GPUS[0])
-    print('Number of devices: %d' % strategy.num_replicas_in_sync)
-
-    return strategy
 
 # Model Output Path
 # ----------------------------------------------------------------------------------------------
@@ -467,164 +395,18 @@ def get_config_yaml(path, args):
     config['visualization_dir'] = config['root_dir']+'/visualization/'
 
     return config
-
-
-# Helper functions for visualizing Sentinel-1 images
-def scale_img(matrix):
-    """
-    Returns a scaled (H, W, D) image that is visually inspectable.
-    Image is linearly scaled between min_ and max_value, by channel.
-
-    Args:
-        matrix (np.array): (H, W, D) image to be scaled
-
-    Returns:
-        np.array: Image (H, W, 3) ready for visualization
-    """
-    # Set min/max values
-    min_values = np.array([[-23, -28, 0.2]])
-    max_values = np.array([[0, -5, 1]])
-
-    # Reshape matrix
-    w, h, d = matrix.shape
-    matrix = np.reshape(matrix, [w * h, d]).astype(np.float64)
-
-    # Scale by min/max
-    matrix = (matrix - min_values) / (
-        max_values - min_values
-    )
-    matrix = np.reshape(matrix, [w, h, d])
-
-    # Limit values to 0/1 interval
-    return matrix.clip(0, 1)
-
-
-def create_false_color_composite(vv_img, vh_img):
-    """
-    Returns a S1 false color composite for visualization.
-
-    Args:
-        path_vv (str): path to the VV band
-        path_vh (str): path to the VH band
-
-    Returns:
-        np.array: image (H, W, 3) ready for visualization
-    """
-    # Stack arrays along the last dimension
-    s1_img = np.stack((vv_img, vh_img), axis=-1)
-
-    # Create false color composite
-    img = np.zeros((512, 512, 3), dtype=np.float32)
-    img[:, :, :2] = s1_img.copy()
-    img[:, :, 2] = (s1_img[:, :, 0]*s1_img[:, :, 1])
-
-    return scale_img(img)
-
-
-# def plot_3d():
-
-#     # extract csv logger paths
-#     paths = glob.glob(
-#         "/home/mdsamiul/github_project/flood_water_mapping_segmentation/csv_logger/ad_unet/*.csv")
-
-#     # smooth plotting values
-#     # Weight between 0 and 1
-#     def my_tb_smooth(scalars: list[float], weight: float) -> list[float]:
-#         """
-
-#         ref: https://stackoverflow.com/questions/42011419/is-it-possible-to-call-tensorboard-smooth-function-manually
-
-#         :param scalars:
-#         :param weight:
-#         :return:
-#         """
-#         last = scalars[0]  # First value in the plot (first timestep)
-#         smoothed: list = []
-#         for point in scalars:
-#             smoothed_val = last * weight + \
-#                 (1 - weight) * point  # Calculate smoothed value
-#             smoothed.append(smoothed_val)                        # Save it
-#             # Anchor the last smoothed value
-#             last = smoothed_val
-#         return smoothed
-
-#     # initialize variables
-#     epoch = []
-#     mean_iou = []
-#     patch = []
-
-#     # read data and smooth for plot
-#     for path in paths:
-#         if path.split("_")[-5] == "patchify" and path.split("_")[-2] == "60":
-#             patch_size = int(path.split("_")[-4])
-#         else:
-#             patch_size = 512
-#         data = pd.read_csv(path)
-#         epoch.append(range(0, 60*2))
-#         mean_iou.append(my_tb_smooth(data["val_my_mean_iou"][:60], 0.95)+(
-#             my_tb_smooth(data["val_my_mean_iou"][:60], 0.95)[::-1]))
-#         patch.append(([patch_size]*60)+([patch_size]*60))
-
-#     # numpy array convert for plot
-#     epoch = np.array(epoch)
-#     mean_iou = np.array(mean_iou)
-#     patch = np.array(patch)
-
-#     # create figure and plot
-#     fig = plt.figure()
-#     ax = plt.axes(projection='3d')
-#     ax.plot_surface(patch, epoch, mean_iou, rstride=1, cstride=1,
-#                     cmap='jet', edgecolor='none')\
-
-#     # customize figure visualization with labels and title
-#     ax.set_yticklabels([-1, 10, 20, 40, 40, 20, 10])
-#     ax.view_init(elev=20, azim=70)
-#     plt.title('MeanIou accuracy for different patch size')
-#     ax.set_zlabel("MeanIou accuracy")
-#     ax.set_ylabel('Epoch')
-#     ax.set_xlabel('Patch')
-#     plt.savefig("area2.png", dpi=800)
-#     plt.show()
-
-
-def find_best_worst():
-
-    path = glob.glob(
-        "/home/mdsamiul/github_project/flood_water_mapping_segmentation/prediction/mnet/test/*.*")
-
-    scores = np.zeros((55, 4), dtype=np.float32)
-    for i in range(len(path)):
-        id = int(path[i].split("_")[-3])
-        acu = np.float32(path[i].split("_")[-1].replace(".png", ""))
-        if path[i].split("_")[-4] == "patchify":
-            scores[id][2] = acu
-        elif path[i].split("_")[-4] == "balance":
-            scores[id][1] = acu
-        elif path[i].split("_")[-4] == "WOC":
-            scores[id][3] = acu
-        else:
-            scores[id][0] = acu
-
-    df = pd.DataFrame(scores)
-    df.to_csv("predic_score.csv")
     
-    
-# def frame_to_video(config, fname, framerate=30):
-#     img_array = []
-#     for filename in glob.glob( config['prediction_eval_dir'] + '*.jpg'):
-#         img = cv2.imread(filename)
-#         height, width, layers = img.shape
-#         size = (width, height)
-#         img_array.append(img)
-
-#     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-#     out = cv2.VideoWriter(fname,fourcc, framerate, size)
-    
-#     for i in range(len(img_array)):
-#         out.write(img_array[i])
-#     out.release()
     
 def frame_to_video(config, fname, fps=30):
+    """
+    Summary:
+        create video from frames
+    Arguments:
+        config (dict): configuration dictionary
+        fname (str): name of the video
+    Return:
+        video
+    """
     
     image_folder=config['prediction_eval_dir']
     image_names = os.listdir(image_folder)
@@ -634,3 +416,22 @@ def frame_to_video(config, fname, fps=30):
         image_files.append(image_folder + "/" + i)
     clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
     clip.write_videofile(fname)
+
+
+def video_to_frame(config):
+    """
+    Summary:
+        create frames from video
+    Arguments:
+        config (dict): configuration dictionary
+    Return:
+        frames
+    """
+    
+    vidcap = cv2.VideoCapture(config["video_path"])
+    success,image = vidcap.read()
+    count = 0
+    while success:
+        cv2.imwrite(config['dataset_dir'] + '/testing' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
+        success,image = vidcap.read() 
+        count += 1

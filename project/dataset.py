@@ -10,21 +10,8 @@ import matplotlib
 import cv2
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical, Sequence
+from utils import video_to_frame
 matplotlib.use('Agg')
-
-
-
-
-# labels normalization values (given/fixed)
-label_norm = {0: ["_vv.tif", -17.54, 5.15],
-              1: ["_vh.tif", -10.68, 4.62],
-              2: ["_nasadem.tif", 166.47, 178.47],
-              3: ["_jrc-gsw-change.tif", 238.76, 5.15],
-              4: ["_jrc-gsw-extent.tif", 2.15, 22.71],
-              5: ["_jrc-gsw-occurrence.tif", 6.50, 29.06],
-              6: ["_jrc-gsw-recurrence.tif", 10.04, 33.21],
-              7: ["_jrc-gsw-seasonality.tif", 2.60, 22.79],
-              8: ["_jrc-gsw-transitions.tif", 0.55, 1.94]}
 
 
 def transform_data(label, num_classes):
@@ -59,7 +46,6 @@ def read_img(directory, in_channels=None, label=False, patch_idx=None, height=25
         mask = cv2.imread(directory)
         mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         
-        # mask = np.where((mask<105) | (mask>105), 0, 1)
         mask[mask < 105] = 0
         mask[mask > 104] = 1
         
@@ -70,12 +56,9 @@ def read_img(directory, in_channels=None, label=False, patch_idx=None, height=25
             return mask #np.expand_dims(mask, axis=2)
     # for features images
     else:
-        #X = np.zeros((height, width, in_channels))
-
         # read N number of channels
         X = cv2.imread(directory)
-        # normalize data
-        #X[:, :, i] = (fea - label_norm[i][1]) / label_norm[i][2]
+
         if patch_idx:
             # extract patch from original features
             return X[patch_idx[0]:patch_idx[1], patch_idx[2]:patch_idx[3], :]
@@ -120,16 +103,6 @@ def save_csv(dictionary, config, name):
     df.to_csv((config['dataset_dir']+name), index=False, header=True)
 
 
-def video_to_frame(config):
-    vidcap = cv2.VideoCapture(config["video_path"])
-    success,image = vidcap.read()
-    count = 0
-    while success:
-        cv2.imwrite(config['dataset_dir'] + '/testing' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
-        success,image = vidcap.read() 
-        count += 1
-
-
 def data_path_split(config):
     """
     Summary:
@@ -170,6 +143,14 @@ def data_path_split(config):
     
     
 def eval_data_path_split(config):
+    """
+    Summary:
+        for evaltion generate frame from video if video path is given and create csv file from testing folder
+    Arguments:
+        config (dict): Configuration directory
+    Return:
+        csv file
+    """
     
     data_path = config["dataset_dir"]
     images = []
@@ -184,7 +165,6 @@ def eval_data_path_split(config):
     
     for i in image_names:
         images.append(image_path + "/" + i)
-
 
     # creating dictionary for train, test and validation
     eval = {'feature_ids': images, 'masks': images}
@@ -581,21 +561,30 @@ class MyDataset(Sequence):
 
         return tf.convert_to_tensor(imgs), tf.convert_to_tensor(tgts), idx
 
-# def select_dataset(config, data):
-#     if config["trainOn"] == 'um':
-#         data = data[data['feature_ids'].str.contains('uu_00') == False]
-#         data = data[data['feature_ids'].str.contains('umm_00') == False]
-#         return data
-#     elif config["trainOn"] == 'umm':
-#         data = data[data['feature_ids'].str.contains('uu_00') == False]
-#         data = data[data['feature_ids'].str.contains('um_00') == False]
-#         return data
-#     elif config["trainOn"] == 'uu':
-#         data = data[data['feature_ids'].str.contains('umm_00') == False]
-#         data = data[data['feature_ids'].str.contains('um_00') == False]
-#         return data
-#     else:
-#         return data
+def select_dataset(config, data):
+    """
+    Summary:
+        select the image based on condition
+    Arguments:
+        data: data file contain image paths
+        config (dict): configuration directory
+    Returns:
+        data file
+    """
+    if config["trainOn"] == 'um':
+        data = data[data['feature_ids'].str.contains('uu_00') == False]
+        data = data[data['feature_ids'].str.contains('umm_00') == False]
+        return data
+    elif config["trainOn"] == 'umm':
+        data = data[data['feature_ids'].str.contains('uu_00') == False]
+        data = data[data['feature_ids'].str.contains('um_00') == False]
+        return data
+    elif config["trainOn"] == 'uu':
+        data = data[data['feature_ids'].str.contains('umm_00') == False]
+        data = data[data['feature_ids'].str.contains('um_00') == False]
+        return data
+    else:
+        return data
 
 def get_train_val_dataloader(config):
     """
@@ -637,15 +626,13 @@ def get_train_val_dataloader(config):
             valid_dir = json.loads(j.read())
          
         # selecting which dataset to train and validate   
-        # train_dir = select_dataset(config, train_dir)
-        # valid_dir = select_dataset(config, valid_dir)
-        
         train_features = train_dir['feature_ids']
         train_masks = train_dir['masks']
         valid_features = valid_dir['feature_ids']
         valid_masks = valid_dir['masks']
         train_idx = train_dir['patch_idx']
         valid_idx = valid_dir['patch_idx']
+        
     # initializing train, test and validatinn for images
     else:
         print("Loading features and masks directories.....")
@@ -653,9 +640,6 @@ def get_train_val_dataloader(config):
         valid_dir = pd.read_csv(config['valid_dir'])
         
         # selecting which dataset to train and validate   
-        # train_dir = select_dataset(config, train_dir)
-        # valid_dir = select_dataset(config, valid_dir)
-        
         train_features = train_dir.feature_ids.values
         train_masks = train_dir.masks.values
         valid_features = valid_dir.feature_ids.values
@@ -746,45 +730,3 @@ def get_test_dataloader(config):
                              num_class=config['num_classes'], patch_idx=test_idx)
 
     return test_dataset
-
-
-# if __name__ == "__main__":
-#     train_dir = pd.read_csv(
-#         "/home/mdsamiul/github_project/road_segmentation/data/train.csv")
-#     train_features = train_dir.feature_ids.values
-#     train_masks = train_dir.masks.values
-#     weights = [1.8, 8.2]
-#     with open("/home/mdsamiul/github_project/road_segmentation/data/json/train_patch_phr_cb_240.json", 'r') as j:
-#         train_dir = json.loads(j.read())
-#     with open("/home/mdsamiul/github_project/road_segmentation/data/json/valid_patch_phr_cb_240.json", 'r') as j:
-#         valid_dir = json.loads(j.read())
-#     train_features = train_dir['feature_ids']
-#     train_masks = train_dir['masks']
-#     valid_features = valid_dir['feature_ids']
-#     valid_masks = valid_dir['masks']
-#     train_idx = train_dir['patch_idx']
-#     valid_idx = valid_dir['patch_idx']
-
-#     train_dataset = MyDataset(train_features, train_masks,
-#                               in_channels=3, patchify=True,
-#                               batch_size=64, transform_fn=transform_data,
-#                               num_class=2, augment=None,
-#                               weights=weights, patch_idx=train_idx)
-    # with open("/home/mdsamiul/github_project/road_segmentation/data/json/test_patch_phr_cb_240.json", 'r') as j:
-    #         test_dir = json.loads(j.read())
-    # test_features = test_dir['feature_ids']
-    # test_masks = test_dir['masks']
-    # test_idx = test_dir['patch_idx']
-    # test_dataset = MyDataset(test_features, test_masks,
-    #                          in_channels=3, patchify=True,
-    #                          batch_size=10, transform_fn=transform_data,
-    #                          num_class=2, patch_idx=test_idx)
-
-    # for x, y in train_dataset:
-    #     x = x.numpy()
-    #     y = y.numpy()
-    #     # print(x.shape)
-    #     # print(y.shape)
-    #     print(np.unique(y))
-    #     print("---------------------------")
-    #     break

@@ -6,7 +6,7 @@ from dataset import get_test_dataloader
 from loss import *
 from tensorflow import keras
 from tensorflow.keras.models import load_model
-from utils import show_predictions, get_config_yaml, create_paths, patch_show_predictions, frame_to_video
+from utils import get_config_yaml, create_paths, patch_show_predictions, frame_to_video
 
 
 # Parsing variable
@@ -46,11 +46,6 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = config["gpu"]
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
-# Multiple GPU Setup
-# ----------------------------------------------------------------------------------------------
-# test strategy Muli-GPU or single-GPU
-# strategy = set_gpu(config['gpu'])
-
 # Load Model
 # ----------------------------------------------------------------------------------------------
 print("Loading model {} from {}".format(
@@ -67,11 +62,8 @@ test_dataset = get_test_dataloader(config)
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
 print("Saving test/evaluation predictions...")
-if config['patchify']:
-    print("call patch_show_predictions")
-    patch_show_predictions(test_dataset, model, config)
-else:
-    show_predictions(test_dataset, model, config)
+print("call patch_show_predictions")
+patch_show_predictions(test_dataset, model, config)
 
 
 # Evaluation Score
