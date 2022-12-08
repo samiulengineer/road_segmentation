@@ -296,7 +296,6 @@ def val_show_predictions(dataset, model, config):
 # Model Output Path
 # ----------------------------------------------------------------------------------------------
 
-
 def create_paths(config, test=False, eval=False):
     """
     Summary:
@@ -328,7 +327,6 @@ def create_paths(config, test=False, eval=False):
 
 # Create config path
 # ----------------------------------------------------------------------------------------------
-
 
 def get_config_yaml(path, args):
     """

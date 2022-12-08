@@ -59,10 +59,11 @@ patience: 300 # required for early_stopping, if accuracy does not change for 500
 # ----------------------------------------------------------------------------------------------
 #load_model_name : m.hdf5
 load_model_name: fapnet_ex_phr_cb_32_1000_ep_1000_02-Dec-22.hdf5
-load_model_dir: None
-evaluation: True
-video_path: None    #/home/mdsamiul/github_project/road_segmentation/data/video.mp4
+load_model_dir: None #  If None, then by befault 'root_dir/model/model_name/load_model_name'
+evaluation: False # default evaluation value will not work
+video_path: None    # If None, then by default 'root_dir/data/video_frame'
+
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
-plot_single: False # if True, then only index x_test image will plot
+plot_single: False # if True, then only index x_test image will plot # default plot_single  value will not work
 index: -1 #170 # by default -1 means random image else specific index image provide by user

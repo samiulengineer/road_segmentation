@@ -58,8 +58,7 @@ train_dataset, val_dataset = get_train_val_dataloader(config)
 # Metrics
 # ----------------------------------------------------------------------------------------------
 metrics = list(get_metrics(config).values())  # [list] required for new model
-# [dictionary] required for transfer learning & fine tuning
-custom_obj = get_metrics(config)
+custom_obj = get_metrics(config) # [dictionary] required for transfer learning & fine tuning
 
 # Optimizer
 # ----------------------------------------------------------------------------------------------
@@ -70,8 +69,8 @@ adam = tfa.optimizers.AdamW(
 
 # Loss Function
 # ----------------------------------------------------------------------------------------------
-loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-custom_obj['loss'] = focal_loss()
+loss = tf.keras.losses.BinaryCrossentropy(from_logits=True) # required for new model
+custom_obj['loss'] = focal_loss() # required for transfer learning/fine-tuning
 
 # Compile
 # ----------------------------------------------------------------------------------------------
@@ -85,7 +84,6 @@ if (os.path.exists(os.path.join(config['load_model_dir'], config['load_model_nam
     model = get_model_transfer_lr(model, config['num_classes'])
     model.compile(optimizer=adam, loss=loss, metrics=metrics)
 
-# transfer learning
 else:
     # fine-tuning
     if (os.path.exists(os.path.join(config['load_model_dir'], config['load_model_name']))):

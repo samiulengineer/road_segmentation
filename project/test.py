@@ -23,12 +23,12 @@ parser.add_argument("--evaluation")
 parser.add_argument("--video_path")
 args = parser.parse_args()
 
-if args.plot_single == 'True':
+if args.plot_single == 'True': # by default config will not work
     args.plot_single = True
 else:
     args.plot_single = False
     
-if args.evaluation == 'True':
+if args.evaluation == 'True': # by default config will not work
     args.evaluation = True
 else:
     args.evaluation = False
