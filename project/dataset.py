@@ -185,7 +185,7 @@ def eval_data_path_split(config):
     image_names = sorted(image_names)
     
     for i in image_names:
-        images.append(image_path + "/" + i)
+        images.append(image_path + i)       # + "/" 
 
     # creating dictionary for train, test and validation
     eval = {'feature_ids': images, 'masks': images}

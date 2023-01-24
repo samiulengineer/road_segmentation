@@ -163,6 +163,31 @@ def display(display_list, idx, directory, score, exp, evaluation=False):
     plt.clf()
     plt.cla()
     plt.close()
+    
+    
+def display_label(img, img_path, directory):
+    """
+    Summary:
+        save only predicted labels
+    Arguments:
+        img (np.array): predicted label
+        img_path (str) : source image path
+        directory (str): saving directory
+    Return:
+        save images figure into directory
+    """
+    
+    img_path_split = os.path.split(img_path)
+    
+    if 'umm_' in img_path_split[1]:
+        img_name = img_path_split[1][ : 4] + 'road_' + img_path_split[1][4 : ]
+    elif 'um_' in img_path_split[1]:
+        img_name = img_path_split[1][ : 3] + 'lane_' + img_path_split[1][3 : ]
+    else:
+        img_name = img_path_split[1][ : 3] + 'road_' + img_path_split[1][3 : ]
+    
+    plt.imsave(directory+'/'+img_name, img)
+    
 
 # Combine patch images and save
 # ----------------------------------------------------------------------------------------------
@@ -224,10 +249,13 @@ def patch_show_predictions(dataset, model, config):
 
         # plot and saving image
         if config["evaluation"]:
-            display({"image": feature_img,      # change in the key "image" will have to change in the display
-                     #"mask": pred_full_label,
-                 "Prediction": pred_full_label
-                 }, i, config['prediction_eval_dir'], score, config['experiment'], config["evaluation"])
+            # display({"image": feature_img,      # change in the key "image" will have to change in the display
+            #          #"mask": pred_full_label,
+            #      "Prediction": pred_full_label
+            #      }, i, config['prediction_eval_dir'], score, config['experiment'], config["evaluation"])
+            
+            # use this function only to save predicted image
+            display_label(pred_full_label, test_dir["feature_ids"][i], config['prediction_eval_dir'])
         else:
             display({"image": feature_img,      # change in the key "image" will have to change in the display
                     "Mask": np.argmax([mask], axis=3)[0],

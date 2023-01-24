@@ -187,32 +187,32 @@ def display_all(data):
 
 if __name__ == '__main__':
 
-    config = get_config_yaml('project/config.yaml', {})  
+    config = get_config_yaml('project/config.yaml', {})
 
     pathlib.Path(config['visualization_dir']).mkdir(
         parents=True, exist_ok=True)
     
-    # check for label in the dataset. For patchify pass True with json file. For real image pass False with the csv file
-    class_balance_check(False, "/home/mdsamiul/github_project/road_segmentation/data/train.csv")
-    class_balance_check(True, "/home/mdsamiul/github_project/road_segmentation/data/json/train_patch_phr_cb_256.json")
+    # # check for label in the dataset. For patchify pass True with json file. For real image pass False with the csv file
+    # class_balance_check(False, "/home/mdsamiul/github_project/road_segmentation/data/train.csv")
+    # class_balance_check(True, "/home/mdsamiul/github_project/road_segmentation/data/json/train_patch_phr_cb_256.json")
     
     
-    # check shape of input image and mask
-    check_height_width("/home/mdsamiul/github_project/road_segmentation/data/train.csv")
+    # # check shape of input image and mask
+    # check_height_width("/home/mdsamiul/github_project/road_segmentation/data/train.csv")
     
     
     # metrics result plot
-    models = ['Fapnet', 'UNet', 'UNet++', 'VNet', 'U2Net', 'DNCNN']
+    models = ['Fapnet', 'UNet', 'UNet++', 'VNet', 'U2Net', 'DNCNN', 'FPN', 'LINKNET', 'ATTUNET', 'R2UNET']
     metrics = {
-        'MIOU':      [0.96, 0.76, 0.78, 0.77, 0.61, 0.76],
-        'F-1 score': [0.98, 0.91, 0.91, 0.87, 0.93, 0.91],
-        'Precision': [0.98, 0.70, 0.87, 0.66, 0.50, 0.68],
-        'Recall':    [0.98, 0.74, 0.63, 0.71, 0.80, 0.74]
+        'MIOU':      [0.96, 0.76, 0.78, 0.77, 0.61, 0.76, 0.83, 0.84, 0.86, 0.86],
+        'F-1 score': [0.98, 0.91, 0.91, 0.87, 0.93, 0.91, 0.95, 0.96, 0.96, 0.94],
+        'Precision': [0.98, 0.70, 0.87, 0.66, 0.50, 0.68, 0.87, 0.84, 0.88, 0.77],
+        'Recall':    [0.98, 0.74, 0.63, 0.71, 0.80, 0.74, 0.90, 0.95, 0.95, 0.89]
     }
     fname = config['visualization_dir'] + 'metrics_result.jpg'
     plot_curve(models, metrics, fname)
     
     
-    # display all
-    data = pd.read_csv('/home/mdsamiul/github_project/road_segmentation/data/valid.csv')
-    display_all(data)
+    # # display all
+    # data = pd.read_csv('/home/mdsamiul/github_project/road_segmentation/data/valid.csv')
+    # display_all(data)
