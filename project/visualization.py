@@ -137,12 +137,13 @@ def plot_curve(models, metrics, fname):
     # plt.legend(loc='best')
     ax.legend(prop=dict(weight='bold', size=18), loc='best')
     
-    plt.xlabel("Models", fontweight="bold")
-    plt.ylabel("Metrics score", fontweight="bold")
+    plt.xlabel("Models", fontsize=26, fontweight="bold")
+    plt.ylabel("Metrics score", fontsize=26, fontweight="bold")
     labels = ax.get_xticklabels() + ax.get_yticklabels()
     for label in labels:
         label.set_fontweight('bold')
-    plt.xticks(ticks=threshold,labels=models)
+    plt.xticks(ticks=threshold,labels=models, fontsize=16)
+    plt.yticks(fontsize=16)
     plt.savefig(fname, bbox_inches='tight',  dpi = 1000)
     plt.show()
 
