@@ -10,7 +10,7 @@ from dataset import read_img
 
 # setup gpu
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 
@@ -176,7 +176,7 @@ def display_all(data):
         for i in range(len(display_list)):
             plt.subplot(1, len(display_list), i+1)
             plt.title(title[i])
-            plt.imshow((display_list[title[i]]))
+            plt.imshow((display_list[title[i]]), cmap='gray')
             plt.axis('off')
 
         prediction_name = "img_id_{}.png".format(id) # create file name to save
@@ -203,17 +203,17 @@ if __name__ == '__main__':
     
     
     # metrics result plot
-    models = ['Fapnet', 'UNet', 'UNet++', 'VNet', 'U2Net', 'DNCNN', 'FPN', 'LINKNET', 'ATTUNET', 'R2UNET']
-    metrics = {
-        'MIOU':      [0.96, 0.76, 0.78, 0.77, 0.61, 0.76, 0.83, 0.84, 0.86, 0.86],
-        'F-1 score': [0.98, 0.91, 0.91, 0.87, 0.93, 0.91, 0.95, 0.96, 0.96, 0.94],
-        'Precision': [0.98, 0.70, 0.87, 0.66, 0.50, 0.68, 0.87, 0.84, 0.88, 0.77],
-        'Recall':    [0.98, 0.74, 0.63, 0.71, 0.80, 0.74, 0.90, 0.95, 0.95, 0.89]
-    }
-    fname = config['visualization_dir'] + 'metrics_result.jpg'
-    plot_curve(models, metrics, fname)
+    # models = ['Fapnet', 'UNet', 'UNet++', 'VNet', 'U2Net', 'DNCNN', 'FPN', 'LINKNET', 'ATTUNET', 'R2UNET']
+    # metrics = {
+    #     'MIOU':      [0.96, 0.76, 0.78, 0.77, 0.61, 0.76, 0.83, 0.84, 0.86, 0.86],
+    #     'F-1 score': [0.98, 0.91, 0.91, 0.87, 0.93, 0.91, 0.95, 0.96, 0.96, 0.94],
+    #     'Precision': [0.98, 0.70, 0.87, 0.66, 0.50, 0.68, 0.87, 0.84, 0.88, 0.77],
+    #     'Recall':    [0.98, 0.74, 0.63, 0.71, 0.80, 0.74, 0.90, 0.95, 0.95, 0.89]
+    # }
+    # fname = config['visualization_dir'] + 'metrics_result.jpg'
+    # plot_curve(models, metrics, fname)
     
     
     # # display all
-    # data = pd.read_csv('/home/mdsamiul/github_project/road_segmentation/data/valid.csv')
-    # display_all(data)
+    data = pd.read_csv('/mnt/hdd2/mdsamiul/archive/road_segmentation/data/test.csv')
+    display_all(data)

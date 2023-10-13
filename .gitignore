@@ -166,6 +166,7 @@ tags
 data
 *trace
 prediction
+prediction_prev
 visualization
 output
 archive

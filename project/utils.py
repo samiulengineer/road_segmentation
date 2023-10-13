@@ -149,7 +149,7 @@ def display(display_list, idx, directory, score, exp, evaluation=False):
             plt.axis('off')
         else:  # for plot the rest of the image channel
             plt.title(title[i])
-            plt.imshow((display_list[title[i]]))        #, cmap="gray"
+            plt.imshow((display_list[title[i]]), cmap="gray")        #, cmap="gray"
             plt.axis('off')
     
     # create file name to save
