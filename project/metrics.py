@@ -45,7 +45,7 @@ def get_metrics(config):
     m = MyMeanIOU(config['num_classes'])
     return {
         'my_mean_iou': m,
-        'f1_score': tfa.metrics.F1Score(num_classes=2, average="micro", threshold=0.9),
+        'f1-score': tfa.metrics.F1Score(num_classes=2, average="micro", threshold=0.9),
         'precision': sm.metrics.precision,
         'recall': sm.metrics.recall
     }
