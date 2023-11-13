@@ -7,7 +7,7 @@ from metrics import *
 from tensorflow import keras
 from dataset import get_test_dataloader
 from tensorflow.keras.models import load_model
-from utils import get_config_yaml, create_paths, patch_show_predictions, frame_to_video
+from utils import create_paths, patch_show_predictions, frame_to_video
 
 
 # Parsing variable
@@ -24,12 +24,12 @@ parser.add_argument("--evaluation")
 parser.add_argument("--video_path")
 args = parser.parse_args()
 
-if args.plot_single == 'True': # by default config will not work
+if args.plot_single == 'True':
     args.plot_single = True
 else:
     args.plot_single = False
     
-if args.evaluation == 'True': # by default config will not work
+if args.evaluation == 'True':
     args.evaluation = True
 else:
     args.evaluation = False
@@ -38,8 +38,6 @@ t0 = time.time()
 
 # Set up test configaration
 # ----------------------------------------------------------------------------------------------
-# config = get_config_yaml('project/config.yaml', vars(args))
-
 if evaluation:
     create_paths(eval = True)
 else:

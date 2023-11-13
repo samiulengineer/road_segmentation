@@ -38,7 +38,7 @@ def get_metrics():
     Summary:
         create keras MeanIoU object and all custom metrics dictornary
     Arguments:
-        config (dict): configuration dictionary
+        empty
     Return:
         metrics directories
     """

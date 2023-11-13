@@ -14,17 +14,17 @@ from tensorflow.keras.layers import LeakyReLU, add, Conv2D, PReLU, ReLU, Concate
 
 
 
-def ad_unet(config):
+def ad_unet():
     """
         Summary:
             Create dynamic MNET model object based on input shape
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
     no_layer = 0
-    inp_size = config["height"]
+    inp_size = height
     start_filter = 4
     while inp_size>=8:
         no_layer += 1
@@ -173,13 +173,13 @@ def unet():
 # ----------------------------------------------------------------------------------------------
 
 
-def mod_unet(config):
+def mod_unet():
     
     """
         Summary:
             Create MNET model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -500,13 +500,13 @@ def RSU4f(input, in_ch = 3, mid_ch = 12, out_ch = 3):
     output = keras.layers.add([hx1d, hxin])
     return output
 
-def u2net(config):
+def u2net():
     
     """
         Summary:
             Create U2NET model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -638,13 +638,13 @@ def up_resBlock(forward_conv,input_conv,stage):
     else:
         return conv_add
     
-def vnet(config):
+def vnet():
     
     """
         Summary:
             Create VNET model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -685,13 +685,13 @@ def conv2dtranspose(filters: int):
                            strides = (2, 2),
                            padding = 'same')
 
-def unet_plus_plus(config):
+def unet_plus_plus():
     
     """
         Summary:
             Create UNET++ model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -854,13 +854,13 @@ def unet_plus_plus(config):
 
 
 # Keras unet collection
-def kuc_vnet(config):
+def kuc_vnet():
     
     """
         Summary:
             Create VNET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -875,13 +875,13 @@ def kuc_vnet(config):
     model = Model(inputs = model.input, outputs=output)
     return model
 
-def kuc_unet3pp(config):
+def kuc_unet3pp():
     
     """
         Summary:
             Create UNET 3++ from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -897,13 +897,13 @@ def kuc_unet3pp(config):
     model = Model(inputs = model.input, outputs=output)
     return model
 
-def kuc_r2unet(config):
+def kuc_r2unet():
     
     """
         Summary:
             Create R2UNET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -919,13 +919,13 @@ def kuc_r2unet(config):
     model = Model(inputs = model.input, outputs=output)
     return model
 
-def kuc_unetpp(config):
+def kuc_unetpp():
     
     """
         Summary:
             Create UNET++ from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -942,13 +942,13 @@ def kuc_unetpp(config):
     return model
 
 
-def kuc_restunet(config):
+def kuc_restunet():
     
     """
         Summary:
             Create RESTUNET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -965,13 +965,13 @@ def kuc_restunet(config):
     return model
 
 
-def kuc_transunet(config):
+def kuc_transunet():
     
     """
         Summary:
             Create TENSNET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -988,13 +988,13 @@ def kuc_transunet(config):
     return model
 
 
-def kuc_swinnet(config):
+def kuc_swinnet():
     
     """
         Summary:
             Create SWINNET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1010,13 +1010,13 @@ def kuc_swinnet(config):
     return model
 
 
-def kuc_u2net(config):
+def kuc_u2net():
     
     """
         Summary:
             Create U2NET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1035,13 +1035,13 @@ def kuc_u2net(config):
 
 
 
-def kuc_attunet(config):
+def kuc_attunet():
     
     """
         Summary:
             Create ATTENTION UNET from keras unet collection library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1059,13 +1059,13 @@ def kuc_attunet(config):
 
 
 # Segmentation Models unet/linknet/fpn/pspnet
-def sm_unet(config):
+def sm_unet():
     
     """
         Summary:
             Create UNET from segmentation models library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1080,12 +1080,12 @@ def sm_unet(config):
     return model
 
 
-def sm_linknet(config):
+def sm_linknet():
     """
         Summary:
             Create LINKNET from segmentation models library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1100,12 +1100,12 @@ def sm_linknet(config):
     return model
 
 
-def sm_fpn(config):
+def sm_fpn():
     """
         Summary:
             Create FPN from segmentation models library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1120,12 +1120,12 @@ def sm_fpn(config):
     return model
 
 
-def sm_pspnet(config):
+def sm_pspnet():
     """
         Summary:
             Create PSPNET from segmentation models library model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
@@ -1167,7 +1167,7 @@ def get_model_transfer_lr(model, num_classes):
     
     return model
 
-def ex_mnet(config):
+def ex_mnet():
     #Build the model
     inputs = Input((height, width, in_channels))
     
@@ -1274,9 +1274,9 @@ def ex_mnet(config):
     return model
 
 #PLANET model
-def wnet(config):
+def wnet():
     no_layer = 0
-    inp_size = config["height"]
+    inp_size = height
     start_filter = 16
     while inp_size>=8:
         no_layer += 1
@@ -1571,8 +1571,8 @@ class MaskTransformer(layers.Layer):
                 "im_size": self.im_size}
 
 
-def create_vit_classifier(config):
-    inputs = layers.Input(shape=input_shape, batch_size=config["batch_size"])
+def create_vit_classifier():
+    inputs = layers.Input(shape=input_shape, batch_size=batch_size)
     # Augment data.
     # Create patches.
     patches = Patches(patch_size)(inputs)
