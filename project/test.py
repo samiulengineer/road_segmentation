@@ -1,10 +1,11 @@
 import os
-import argparse
 import time
-from metrics import *
-from dataset import get_test_dataloader
+import argparse
 from loss import *
+from config import *
+from metrics import *
 from tensorflow import keras
+from dataset import get_test_dataloader
 from tensorflow.keras.models import load_model
 from utils import get_config_yaml, create_paths, patch_show_predictions, frame_to_video
 
@@ -34,56 +35,55 @@ else:
     args.evaluation = False
 
 t0 = time.time()
+
 # Set up test configaration
 # ----------------------------------------------------------------------------------------------
-config = get_config_yaml('project/config.yaml', vars(args))
+# config = get_config_yaml('project/config.yaml', vars(args))
 
-if config["evaluation"]:
-    create_paths(config, eval = True)
+if evaluation:
+    create_paths(eval = True)
 else:
-    create_paths(config, test = True)
+    create_paths(test = True)
 
 
 
 # setup gpu
 # ----------------------------------------------------------------------------------------------
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = config["gpu"]
+os.environ["CUDA_VISIBLE_DEVICES"] = gpu
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 # Load Model
 # ----------------------------------------------------------------------------------------------
-print("Loading model {} from {}".format(
-    config['load_model_name'], config['load_model_dir']))
+print("Loading model {} from {}".format(load_model_name, load_model_dir))
 # with strategy.scope(): # if multiple GPU is required
-model = load_model(os.path.join(
-    config['load_model_dir'], config['load_model_name']), compile=False)
+model = load_model((load_model_dir / load_model_name), compile=False)
 
 
 # Dataset
 # ----------------------------------------------------------------------------------------------
-test_dataset = get_test_dataloader(config)
+test_dataset = get_test_dataloader()
 
 # Prediction Plot
 # ----------------------------------------------------------------------------------------------
 print("Saving test/evaluation predictions...")
 print("call patch_show_predictions")
-patch_show_predictions(test_dataset, model, config)
+patch_show_predictions(test_dataset, model)
 
 
 # Evaluation Score
 # ----------------------------------------------------------------------------------------------
-if not config['evaluation']:
-    metrics = list(get_metrics(config).values())
-    adam = keras.optimizers.Adam(learning_rate=config['learning_rate'])
+if not evaluation:
+    metrics = list(get_metrics().values())
+    adam = keras.optimizers.Adam(learning_rate = learning_rate)
     model.compile(optimizer=adam, loss=focal_loss(), metrics=metrics)
     model.evaluate(test_dataset)
 
 # Frame to video
 # ----------------------------------------------------------------------------------------------
-if config["video_path"] != 'None':
-    fname = config['dataset_dir'] + 'prediction.avi'
-    frame_to_video(config, fname, fps=30)
+if video_path != 'None':
+    fname = dataset_dir + 'prediction.avi'
+    frame_to_video(fname, fps=30)
 
 
 print("training time sec: {}".format((time.time()-t0)))

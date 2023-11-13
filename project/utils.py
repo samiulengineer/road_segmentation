@@ -1,13 +1,12 @@
 import os
 import json
 import math
-import yaml
 import random
 import pathlib
-import config
-from loss import *
 import numpy as np
+from loss import *
 import pandas as pd
+from config import *
 import earthpy.plot as ep
 from tensorflow import keras
 import earthpy.spatial as es
@@ -21,14 +20,13 @@ from dataset import read_img, transform_data
 # Callbacks and Prediction during Training
 # ----------------------------------------------------------------------------------------------
 class SelectCallbacks(keras.callbacks.Callback):
-    def __init__(self, val_dataset, model, config):
+    def __init__(self, val_dataset, model):
         """
         Summary:
             callback class for validation prediction and create the necessary callbacks objects
         Arguments:
             val_dataset (object): MyDataset class object
             model (object): keras.Model object
-            config (dict): configuration dictionary
         Return:
             class object
         """
@@ -36,7 +34,6 @@ class SelectCallbacks(keras.callbacks.Callback):
 
         self.val_dataset = val_dataset
         self.model = model
-        self.config = config
         self.callbacks = []
 
     def lr_scheduler(self, epoch):
@@ -49,8 +46,8 @@ class SelectCallbacks(keras.callbacks.Callback):
             learning rate
         """
         drop = 0.5
-        epoch_drop = self.config['epochs'] / 8.
-        lr = self.config['learning_rate'] * \
+        epoch_drop = self.epochs / 8.
+        lr = self.learning_rate * \
             math.pow(drop, math.floor((1 + epoch) / epoch_drop))
         return lr
 
@@ -63,9 +60,9 @@ class SelectCallbacks(keras.callbacks.Callback):
         Output:
             save predict mask
         """
-        if (epoch % self.config['val_plot_epoch'] == 0):  # every after certain epochs the model will predict mask
+        if (epoch % self.val_plot_epoch == 0):  # every after certain epochs the model will predict mask
             # save image/images with their mask, pred_mask and accuracy
-            val_show_predictions(self.val_dataset, self.model, self.config)
+            val_show_predictions(self.val_dataset, self.model)
 
     def get_callbacks(self, val_dataset, model):
         """
@@ -77,29 +74,28 @@ class SelectCallbacks(keras.callbacks.Callback):
         Return:
             list of callbacks
         """
-        if self.config['csv']:  # save all type of accuracy in a csv file for each epoch
+        if self.csv:  # save all type of accuracy in a csv file for each epoch
             self.callbacks.append(keras.callbacks.CSVLogger(os.path.join(
-                self.config['csv_log_dir'], self.config['csv_log_name']), separator=",", append=False))
+                self.csv_log_dir, self.csv_log_name), separator=",", append=False))
 
-        if self.config['checkpoint']:  # save the best model
+        if self.checkpoint:  # save the best model
             self.callbacks.append(keras.callbacks.ModelCheckpoint(os.path.join(
-                self.config['checkpoint_dir'], self.config['checkpoint_name']), save_best_only=True))
+                self.checkpoint_dir, self.checkpoint_name), save_best_only=True))
 
-        if self.config['tensorboard']:  # Enable visualizations for TensorBoard
+        if self.tensorboard:  # Enable visualizations for TensorBoard
             self.callbacks.append(keras.callbacks.TensorBoard(log_dir=os.path.join(
-                self.config['tensorboard_log_dir'], self.config['tensorboard_log_name'])))
+                self.tensorboard_log_dir, self.tensorboard_log_name)))
 
-        if self.config['lr']:  # adding learning rate scheduler
+        if self.lr:  # adding learning rate scheduler
             self.callbacks.append(
                 keras.callbacks.LearningRateScheduler(schedule=self.lr_scheduler))
 
-        if self.config['early_stop']:  # early stop the training if there is no change in loss
+        if self.early_stop:  # early stop the training if there is no change in loss
             self.callbacks.append(keras.callbacks.EarlyStopping(
-                monitor='my_mean_iou', patience=self.config['patience']))
+                monitor='my_mean_iou', patience=self.patience))
 
-        if self.config['val_pred_plot']:  # plot validated image for each epoch
-            self.callbacks.append(SelectCallbacks(
-                val_dataset, model, self.config))
+        if self.val_pred_plot:  # plot validated image for each epoch
+            self.callbacks.append(SelectCallbacks(val_dataset, model))
 
         return self.callbacks
 
@@ -194,35 +190,34 @@ def display_label(img, img_path, directory):
 # ----------------------------------------------------------------------------------------------
 
 # plot single will not work here
-def patch_show_predictions(dataset, model, config):
+def patch_show_predictions(dataset, model):
     """
     Summary:
         predict patch images and merge together during test and evaluation
     Arguments:
         dataset (object): MyDataset class object
         model (object): keras.Model class object
-        config (dict): configuration dictionary
     Return:
         merged patch image
     """
     
     # predict patch images and merge together
-    if config["evaluation"]:
+    if evaluation:
         var_list = ["eval_dir", "p_eval_dir"]
     else:
         var_list = ["test_dir", "p_test_dir"]
 
-    with open(config[var_list[1]], 'r') as j:  # opening the json file
+    with open([var_list[1]], 'r') as j:  # opening the json file
         patch_test_dir = json.loads(j.read())
 
     df = pd.DataFrame.from_dict(patch_test_dir)  # read as panadas dataframe
-    test_dir = pd.read_csv(config[var_list[0]])  # get the csv file
+    test_dir = pd.read_csv([var_list[0]])  # get the csv file
     total_score = 0.0
 
     # loop to traverse full dataset
     for i in range(len(test_dir)):
         mask_s = transform_data(
-            read_img(test_dir["masks"][i], label=True), config['num_classes'])
+            read_img(test_dir["masks"][i], label=True), num_classes)
         mask_size = np.shape(mask_s)
         # for same mask directory get the index
         idx = df[df["masks"] == test_dir["masks"][i]].index
@@ -238,59 +233,58 @@ def patch_show_predictions(dataset, model, config):
                             p_idx[2]:p_idx[3]] = pred_mask[0]   # [start hig: end index, ]
 
         # read original image and mask
-        feature_img = read_img(test_dir["feature_ids"][i])          #, in_channels=config['in_channels']
+        feature_img = read_img(test_dir["feature_ids"][i])          #, in_channels=in_channels
         mask = transform_data(
-            read_img(test_dir["masks"][i], label=True), config['num_classes'])
+            read_img(test_dir["masks"][i], label=True), num_classes)
         
         # calculate keras MeanIOU score
-        m = keras.metrics.MeanIoU(num_classes=config['num_classes'])
+        m = keras.metrics.MeanIoU(num_classes=num_classes)
         m.update_state(np.argmax([mask], axis=3), [pred_full_label])
         score = m.result().numpy()
         total_score += score
 
         # plot and saving image
-        if config["evaluation"]:
+        if evaluation:
             # display({"image": feature_img,      # change in the key "image" will have to change in the display
             #          #"mask": pred_full_label,
             #      "Prediction": pred_full_label
-            #      }, i, config['prediction_eval_dir'], score, config['experiment'], config["evaluation"])
+            #      }, i, prediction_eval_dir, score, experiment, evaluation)
             
             # use this function only to save predicted image
-            display_label(pred_full_label, test_dir["feature_ids"][i], config['prediction_eval_dir'])
+            display_label(pred_full_label, test_dir["feature_ids"][i], prediction_eval_dir)
         else:
             display({"image": feature_img,      # change in the key "image" will have to change in the display
                     "Mask": np.argmax([mask], axis=3)[0],
                     "Prediction (miou_{:.4f})".format(score): pred_full_label 
-                    }, i, config['prediction_test_dir'], score, config['experiment'])
+                    }, i, prediction_test_dir, score, experiment)
 
 
 # validation full image plot
 # ----------------------------------------------------------------------------------------------
-def val_show_predictions(dataset, model, config):
+def val_show_predictions(dataset, model):
     """
     Summary:
         predict patch images and merge together during training
     Arguments:
         dataset (object): MyDataset class object
         model (object): keras.Model class object
-        config (dict): configuration dictionary
     Return:
         merged patch image
     """
     var_list = ["valid_dir", "p_valid_dir"]
 
-    with open(config[var_list[1]], 'r') as j:  # opening the json file
+    with open([var_list[1]], 'r') as j:  # opening the json file
         patch_test_dir = json.loads(j.read())
 
     df = pd.DataFrame.from_dict(patch_test_dir)  # read as panadas dataframe
-    test_dir = pd.read_csv(config[var_list[0]])  # get the csv file
+    test_dir = pd.read_csv([var_list[0]])  # get the csv file
     total_score = 0.0
 
     i = random.randint(0, len(test_dir))
     # loop to traverse full dataset
     
     mask_s = transform_data(
-            read_img(test_dir["masks"][i], label=True), config['num_classes'])
+            read_img(test_dir["masks"][i], label=True), num_classes)
     mask_size = np.shape(mask_s)
         # for same mask directory get the index
     idx = df[df["masks"] == test_dir["masks"][i]].index
@@ -305,11 +299,11 @@ def val_show_predictions(dataset, model, config):
         pred_full_label[p_idx[0]:p_idx[1], p_idx[2]:p_idx[3]] = pred_mask[0]   
 
     # read original image and mask
-    feature_img = read_img(test_dir["feature_ids"][i])          #, in_channels=config['in_channels']
-    mask = transform_data(read_img(test_dir["masks"][i], label=True), config['num_classes'])
+    feature_img = read_img(test_dir["feature_ids"][i])          #, in_channels=in_channels
+    mask = transform_data(read_img(test_dir["masks"][i], label=True), num_classes)
         
     # calculate keras MeanIOU score
-    m = keras.metrics.MeanIoU(num_classes=config['num_classes'])
+    m = keras.metrics.MeanIoU(num_classes=num_classes)
     m.update_state(np.argmax([mask], axis=3), [pred_full_label])
     score = m.result().numpy()
     total_score += score
@@ -319,18 +313,17 @@ def val_show_predictions(dataset, model, config):
     display({"image": feature_img,      # change in the key "image" will have to change in the display
             "Mask": np.argmax([mask], axis=3)[0],
             "Prediction (miou_{:.4f})".format(score): pred_full_label 
-            }, indexNum, config['prediction_val_dir'], score, config['experiment'])
+            }, indexNum, prediction_val_dir, score, experiment)
 
 
 # Model Output Path
 # ----------------------------------------------------------------------------------------------
 
-def create_paths(config, test = False, eval = False):
+def create_paths(test = False, eval = False):
     """
     Summary:
         creating paths for train and test if not exists
     Arguments:
-        config (dict): configuration dictionary
         test (bool): boolean variable for test directory create
     Return:
         create directories
@@ -338,27 +331,26 @@ def create_paths(config, test = False, eval = False):
     if test:
         pathlib.Path(prediction_test_dir).mkdir(parents=True, exist_ok=True)
     if eval:
-        if config["video_path"] != 'None':
+        if video_path != 'None':
             pathlib.Path(dataset_dir / "video_frame").mkdir(parents=True, exist_ok=True)
         pathlib.Path(prediction_eval_dir).mkdir(parents=True, exist_ok=True)
-    else:
+    else: # training
         pathlib.Path(csv_log_dir).mkdir(parents=True, exist_ok=True)
         pathlib.Path(tensorboard_log_dir).mkdir(parents=True, exist_ok=True)
         pathlib.Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
         pathlib.Path(prediction_val_dir).mkdir(parents=True, exist_ok=True)
 
-def frame_to_video(config, fname, fps=30):
+def frame_to_video(fname, fps=30):
     """
     Summary:
         create video from frames
     Arguments:
-        config (dict): configuration dictionary
         fname (str): name of the video
     Return:
         video
     """
     
-    image_folder=config['prediction_eval_dir']
+    image_folder=prediction_eval_dir
     image_names = os.listdir(image_folder)
     image_names = sorted(image_names)
     image_files = []

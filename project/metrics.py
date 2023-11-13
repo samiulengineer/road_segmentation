@@ -4,6 +4,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import tensorflow_model_analysis as tfma
 import segmentation_models as sm
+from config import *
 
 # Setting framework
 
@@ -32,7 +33,7 @@ class MyMeanIOU(tf.keras.metrics.MeanIoU):
 # Metrics
 # ----------------------------------------------------------------------------------------------
 
-def get_metrics(config):
+def get_metrics():
     """
     Summary:
         create keras MeanIoU object and all custom metrics dictornary
@@ -42,7 +43,7 @@ def get_metrics(config):
         metrics directories
     """
 
-    m = MyMeanIOU(config['num_classes'])
+    m = MyMeanIOU(num_classes)
     return {
         'my_mean_iou': m,
         'f1-score': tfa.metrics.F1Score(num_classes=2, average="micro", threshold=0.9),

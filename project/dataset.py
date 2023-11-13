@@ -2,10 +2,10 @@ import os
 import cv2
 import math
 import json
-import config
 import matplotlib
 import numpy as np
 import pandas as pd
+from config import *
 import tensorflow as tf
 import albumentations as A
 from sklearn.model_selection import train_test_split
@@ -66,33 +66,31 @@ def read_img(directory, in_channels=None, label=False, patch_idx=None, height=25
             return X
 
 
-def data_split(images, masks, config):
+def data_split(images, masks):
     """
     Summary:
         split dataset into train, valid and test
     Arguments:
         images (list): all image directory list
         masks (list): all mask directory
-        config (dict): Configuration directory
     Return:
         return the split data.
     """
     # spliting training data
     x_train, x_rem, y_train, y_rem = train_test_split(
-        images, masks, train_size=config['train_size'], random_state=42)
+        images, masks, train_size=train_size, random_state=42)
     # spliting test and validation data
     x_valid, x_test, y_valid, y_test = train_test_split(
         x_rem, y_rem, test_size=0.5, random_state=42)
     return x_train, y_train, x_valid, y_valid, x_test, y_test
 
 
-def save_csv(dictionary, config, name):
+def save_csv(dictionary, name):
     """
     Summary:
         save csv file
     Arguments:
         dictionary (dict): data as a dictionary object
-        config (dict): Configuration directory
         name (str): file name to save
     Return:
         save file
@@ -100,55 +98,53 @@ def save_csv(dictionary, config, name):
     # converting dictionary to pandas dataframe
     df = pd.DataFrame.from_dict(dictionary)
     # from dataframe to csv
-    df.to_csv((config['dataset_dir']+name), index=False, header=True)
+    df.to_csv((dataset_dir+name), index=False, header=True)
 
 
-def video_to_frame(config):
+def video_to_frame():
     """
     Summary:
         create frames from video
     Arguments:
-        config (dict): configuration dictionary
+        empty
     Return:
         frames
     """
     
-    vidcap = cv2.VideoCapture(config["video_path"])
+    vidcap = cv2.VideoCapture(video_path)
     success,image = vidcap.read()
     count = 0
     while success:
-        cv2.imwrite(config['dataset_dir'] + '/video_frame' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
+        cv2.imwrite(dataset_dir + '/video_frame' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
         success,image = vidcap.read() 
         count += 1
         
 
-def data_path_split(config):
+def data_path_split():
     """
     Summary:
         spliting data into train, test, valid
     Arguments:
-        config (dict): Configuration directory
+        empty
     Return:
         save file
     """
-    data_path = config["dataset_dir"]
     images = []
     masks = []
         
-    image_path = data_path + "/image"
-    mask_path = data_path + "/gt_image"
+    image_path = dataset_dir / "image"
+    mask_path = dataset_dir / "gt_image"
     image_names = os.listdir(image_path)
     image_names = sorted(image_names)
     mask_names = os.listdir(mask_path)
     mask_names = sorted(mask_names)
 
     for i in image_names:
-        images.append(image_path + "/" + i)
+        images.append(image_path / i)
     for i in mask_names:
-        masks.append(mask_path + "/" + i)
+        masks.append(mask_path / i)
         
-    x_train, y_train, x_valid, y_valid, x_test, y_test = data_split(
-        images, masks, config)
+    x_train, y_train, x_valid, y_valid, x_test, y_test = data_split(images, masks)
 
     # creating dictionary for train, test and validation
     train = {'feature_ids': x_train, 'masks': y_train}
@@ -156,28 +152,28 @@ def data_path_split(config):
     test = {'feature_ids': x_test, 'masks': y_test}
     
     # saving dictionary as csv files
-    save_csv(train, config, "train.csv")
-    save_csv(valid, config, "valid.csv")
-    save_csv(test, config, "test.csv")
+    save_csv(train, "train.csv")
+    save_csv(valid, "valid.csv")
+    save_csv(test, "test.csv")
     
     
-def eval_data_path_split(config):
+def eval_data_path_split():
     """
     Summary:
         for evaltion generate frame from video if video path is given and create csv file from testing folder
     Arguments:
-        config (dict): Configuration directory
+        empty
     Return:
         csv file
     """
     
-    data_path = config["dataset_dir"]
+    data_path = dataset_dir
     images = []
     
     # video is provided then it will generate frame from video
-    if config["video_path"] != 'None':
-        video_to_frame(config)
-        image_path = data_path + "/video_frame"
+    if video_path != 'None':
+        video_to_frame()
+        image_path = dataset_dir / "video_frame"
         
     else:
         image_path = data_path
@@ -186,13 +182,13 @@ def eval_data_path_split(config):
     image_names = sorted(image_names)
     
     for i in image_names:
-        images.append(image_path + i)       # + "/" 
+        images.append(image_path / i)
 
     # creating dictionary for train, test and validation
     eval = {'feature_ids': images, 'masks': images}
 
     # saving dictionary as csv files
-    save_csv(eval, config, "eval.csv")
+    save_csv(eval, "eval.csv")
     
 
 def class_percentage_check(label):
@@ -312,13 +308,12 @@ def write_json(target_path, target_file, data):
         json.dump(data, f)
 
 
-def patch_images(data, config, name):
+def patch_images(data, name):
     """
     Summary:
         save all patch indices of all images
     Arguments:
         data: data file contain image paths
-        config (dict): configuration directory
         name (str): file name to save patch indices
     Returns:
         save patch indices into file
@@ -331,8 +326,8 @@ def patch_images(data, config, name):
     for i in range(len(data)):
 
         # fetching patch indices
-        patches = save_patch_idx(data.masks.values[i], patch_size=config['patch_size'], stride=config['stride'], test=name.split(
-            "_")[0], patch_class_balance=config['patch_class_balance'])
+        patches = save_patch_idx(data.masks.values[i], patch_size=patch_size, stride=stride, test=name.split(
+            "_")[0], patch_class_balance=patch_class_balance)
 
         # generate data point for each patch image
         for patch in patches:
@@ -344,8 +339,8 @@ def patch_images(data, config, name):
             'masks': masks_dirs, 'patch_idx': all_patch}
 
     # save data
-    write_json((config['dataset_dir']+"json/"),
-               (name+str(config['patch_size'])+'.json'), temp)
+    write_json((dataset_dir+"json/"),
+               (name+str(patch_size)+'.json'), temp)
 
 # Data Augment class
 # ----------------------------------------------------------------------------------------------
@@ -583,68 +578,67 @@ class MyDataset(Sequence):
 
         return tf.convert_to_tensor(imgs), tf.convert_to_tensor(tgts), idx
 
-def select_dataset(config, data):
+def select_dataset(data):
     """
     Summary:
         select the image based on condition
     Arguments:
         data: data file contain image paths
-        config (dict): configuration directory
     Returns:
         data file
     """
-    if config["trainOn"] == 'um':
-        data = data[data['feature_ids'].str.contains('uu_00') == False]
-        data = data[data['feature_ids'].str.contains('umm_00') == False]
+    if trainOn == 'um':
+        data = data[data['feature_ids.str.contains']('uu_00') == False]
+        data = data[data['feature_ids.str.contains']('umm_00') == False]
         return data
-    elif config["trainOn"] == 'umm':
-        data = data[data['feature_ids'].str.contains('uu_00') == False]
-        data = data[data['feature_ids'].str.contains('um_00') == False]
+    elif trainOn == 'umm':
+        data = data[data['feature_ids.str.contains']('uu_00') == False]
+        data = data[data['feature_ids.str.contains']('um_00') == False]
         return data
-    elif config["trainOn"] == 'uu':
-        data = data[data['feature_ids'].str.contains('umm_00') == False]
-        data = data[data['feature_ids'].str.contains('um_00') == False]
+    elif trainOn == 'uu':
+        data = data[data['feature_ids.str.contains']('umm_00') == False]
+        data = data[data['feature_ids.str.contains']('um_00') == False]
         return data
     else:
         return data
 
-def get_train_val_dataloader(config):
+def get_train_val_dataloader():
     """
     Summary:
         read train and valid image and mask directory and return dataloader
     Arguments:
-        config (dict): Configuration directory
+        empty
     Return:
         train and valid dataloader
     """
     # creating csv files for train, test and validation
-    if not (os.path.exists(config['train_dir'])):
-        data_path_split(config)
+    if not (os.path.exists(train_dir)):
+        data_path_split()
     # creating jason files for train, test and validation
-    if not (os.path.exists(config["p_train_dir"])) and config['patchify']:
+    if not (os.path.exists(p_train_dir)) and patchify:
         print("Saving patchify indices for train and test.....")
 
         # for training
-        data = pd.read_csv(config['train_dir'])
+        data = pd.read_csv(train_dir)
 
-        if config["patch_class_balance"]:
-            patch_images(data, config, "train_patch_phr_cb_")
+        if patch_class_balance:
+            patch_images(data, "train_patch_phr_cb_")
         else:
-            patch_images(data, config, "train_patch_phr_")
+            patch_images(data, "train_patch_phr_")
 
         # for validation
-        data = pd.read_csv(config['valid_dir'])
+        data = pd.read_csv(valid_dir)
 
-        if config["patch_class_balance"]:
-            patch_images(data, config, "valid_patch_phr_cb_")
+        if patch_class_balance:
+            patch_images(data, "valid_patch_phr_cb_")
         else:
-            patch_images(data, config, "valid_patch_phr_")
+            patch_images(data, "valid_patch_phr_")
     # initializing train, test and validatinn for patch images
-    if config['patchify']:
+    if patchify:
         print("Loading Patchified features and masks directories.....")
-        with open(config['p_train_dir'], 'r') as j:
+        with open(p_train_dir, 'r') as j:
             train_dir = json.loads(j.read())
-        with open(config['p_valid_dir'], 'r') as j:
+        with open(p_valid_dir, 'r') as j:
             valid_dir = json.loads(j.read())
          
         # selecting which dataset to train and validate   
@@ -658,8 +652,8 @@ def get_train_val_dataloader(config):
     # initializing train, test and validatinn for images
     else:
         print("Loading features and masks directories.....")
-        train_dir = pd.read_csv(config['train_dir'])
-        valid_dir = pd.read_csv(config['valid_dir'])
+        train_dir = pd.read_csv(train_dir)
+        valid_dir = pd.read_csv(valid_dir)
         
         # selecting which dataset to train and validate   
         train_features = train_dir.feature_ids.values
@@ -673,45 +667,45 @@ def get_train_val_dataloader(config):
     print("valid Example : {}".format(len(valid_features)))
 
     # create Augment object if augment is true
-    if config['augment'] and config['batch_size'] > 1:
-        augment_obj = Augment(config['batch_size'], config['in_channels'])
+    if augment and batch_size > 1:
+        augment_obj = Augment(batch_size, in_channels)
         # new batch size after augment data for train
-        n_batch_size = config['batch_size']-augment_obj.aug_img_batch
+        n_batch_size = batch_size-augment_obj.aug_img_batch
     else:
-        n_batch_size = config['batch_size']
+        n_batch_size = batch_size
         augment_obj = None
 
     # get the class weight if weights is true
-    if config['weights']:
-        weights = tf.constant(config['balance_weights'])
+    if weights:
+        weights = tf.constant(balance_weights)
     else:
         weights = None
 
     # create dataloader object
     train_dataset = MyDataset(train_features, train_masks,
-                              in_channels=config['in_channels'], patchify=config['patchify'],
+                              in_channels=in_channels, patchify=patchify,
                               batch_size=n_batch_size, transform_fn=transform_data,
-                              num_class=config['num_classes'], augment=augment_obj,
+                              num_class=num_classes, augment=augment_obj,
                               weights=weights, patch_idx=train_idx)
 
     val_dataset = MyDataset(valid_features, valid_masks,
-                            in_channels=config['in_channels'], patchify=config['patchify'],
-                            batch_size=config['batch_size'], transform_fn=transform_data,
-                            num_class=config['num_classes'], patch_idx=valid_idx)
+                            in_channels=in_channels, patchify=patchify,
+                            batch_size=batch_size, transform_fn=transform_data,
+                            num_class=num_classes, patch_idx=valid_idx)
 
     return train_dataset, val_dataset
 
 
-def get_test_dataloader(config):
+def get_test_dataloader():
     """
     Summary:
         read test image and mask directory and return dataloader
     Arguments:
-        config (dict): Configuration directory
+        empty
     Return:
         test dataloader
     """
-    if config["evaluation"]:
+    if evaluation:
         var_list = ["eval_dir", "p_eval_dir"]
         patch_name = "eval_patch_phr_cb_"
     else:
@@ -720,20 +714,20 @@ def get_test_dataloader(config):
         
     print(var_list)
         
-    if not (os.path.exists(config[var_list[0]])):
-        if config["evaluation"]:
-            eval_data_path_split(config)
+    if not (os.path.exists([var_list[0]])):
+        if evaluation:
+            eval_data_path_split()
         else:
-            data_path_split(config)
+            data_path_split()
 
-    if not (os.path.exists(config[var_list[1]])) and config['patchify']:
+    if not (os.path.exists([var_list[1]])) and patchify:
         print("Saving patchify indices for test.....")
-        data = pd.read_csv(config[var_list[0]])
-        patch_images(data, config, patch_name)
+        data = pd.read_csv([var_list[0]])
+        patch_images(data, patch_name)
 
-    if config['patchify']:
+    if patchify:
         print("Loading Patchified features and masks directories.....")
-        with open(config[var_list[1]], 'r') as j:
+        with open([var_list[1]], 'r') as j:
             test_dir = json.loads(j.read())
         test_features = test_dir['feature_ids']
         test_masks = test_dir['masks']
@@ -741,7 +735,7 @@ def get_test_dataloader(config):
 
     else:
         print("Loading features and masks directories.....")
-        test_dir = pd.read_csv(config[var_list[0]])
+        test_dir = pd.read_csv([var_list[0]])
         test_features = test_dir.feature_ids.values
         test_masks = test_dir.masks.values
         test_idx = None
@@ -749,8 +743,8 @@ def get_test_dataloader(config):
     print("test/evaluation Example : {}".format(len(test_features)))
 
     test_dataset = MyDataset(test_features, test_masks,
-                             in_channels=config['in_channels'], patchify=config['patchify'],
-                             batch_size=config['batch_size'], transform_fn=transform_data,
-                             num_class=config['num_classes'], patch_idx=test_idx)
+                             in_channels=in_channels, patchify=patchify,
+                             batch_size=batch_size, transform_fn=transform_data,
+                             num_class=num_classes, patch_idx=test_idx)
 
     return test_dataset

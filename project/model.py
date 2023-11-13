@@ -1,10 +1,11 @@
-from logging import config
 import math
+from config import *
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from logging import config
 from einops import rearrange
+from tensorflow import keras
 import segmentation_models as sm
+from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 import keras_unet_collection.models as kuc
 from tensorflow.keras import backend as K
@@ -31,7 +32,7 @@ def ad_unet(config):
     
     # building model encoder
     encoder = {}
-    inputs = Input((config['height'], config['width'], config['in_channels']))
+    inputs = Input((height, width, in_channels))
     for i in range(no_layer):
         if i == 0:
             encoder["enc_{}_0".format(i)] = Conv2D(start_filter, (3, 3), name = "enc_{}_0".format(i),activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -63,7 +64,7 @@ def ad_unet(config):
         
     
     # building output layer
-    outputs = Conv2D(config['num_classes'], (1, 1), activation='softmax', dtype='float32')(decoder["dec_{}_1".format(no_layer-1)])
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax', dtype='float32')(decoder["dec_{}_1".format(no_layer-1)])
     model = Model(inputs=[inputs], outputs=[outputs])
     
     return model
@@ -97,18 +98,18 @@ class CustomModel(keras.Model):
 # UNET Model
 # ----------------------------------------------------------------------------------------------
 
-def unet(config):
+def unet():
     
     """
         Summary:
             Create UNET model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
     
-    inputs = Input((config['height'], config['width'], config['in_channels']))
+    inputs = Input((height, width, in_channels))
  
     #Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -160,7 +161,7 @@ def unet(config):
     c9 = Dropout(0.2)(c9)  # Original 0.1
     c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
      
-    outputs = Conv2D(config['num_classes'], (1, 1), activation='softmax', dtype='float32')(c9)
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax', dtype='float32')(c9)
      
     model = Model(inputs=[inputs], outputs=[outputs])
     
@@ -183,7 +184,7 @@ def mod_unet(config):
             Keras.model object
     """
     
-    inputs = Input((config['height'], config['width'], config['in_channels']))
+    inputs = Input((height, width, in_channels))
     
     #Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -258,7 +259,7 @@ def mod_unet(config):
     c13 = Dropout(0.2)(c13)  # Original 0.1
     c13 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c13)
      
-    outputs = Conv2D(config['num_classes'], (1, 1), activation='softmax', dtype='float32')(c13)
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax', dtype='float32')(c13)
      
     model = Model(inputs=[inputs], outputs=[outputs])
     
@@ -510,7 +511,7 @@ def u2net(config):
             Keras.model object
     """
     
-    input = Input((config['height'], config['width'], config['in_channels']))
+    input = Input((height, width, in_channels))
 
     stage1 = RSU7(input, in_ch = 3, mid_ch = 32, out_ch = 64)
     stage1p = keras.layers.MaxPool2D((2,2), strides = 2)(stage1)
@@ -551,20 +552,20 @@ def u2net(config):
     stage1d = RSU6(stage2a, 128, 16, 64)
 
     #side output
-    side1 = Conv2D(config['num_classes'], (3, 3), padding = 'same', name = 'side1')(stage1d)
-    side2 = Conv2D(config['num_classes'], (3, 3), padding = 'same')(stage2d)
+    side1 = Conv2D(num_classes, (3, 3), padding = 'same', name = 'side1')(stage1d)
+    side2 = Conv2D(num_classes, (3, 3), padding = 'same')(stage2d)
     side2 = keras.layers.UpSampling2D((2, 2), name = 'side2')(side2)
-    side3 = Conv2D(config['num_classes'], (3, 3), padding = 'same')(stage3d)
+    side3 = Conv2D(num_classes, (3, 3), padding = 'same')(stage3d)
     side3 = keras.layers.UpSampling2D((4, 4), name = 'side3')(side3)
-    side4 = Conv2D(config['num_classes'], (3, 3), padding = 'same')(stage4d)
+    side4 = Conv2D(num_classes, (3, 3), padding = 'same')(stage4d)
     side4 = keras.layers.UpSampling2D((8, 8), name = 'side4')(side4)
-    side5 = Conv2D(config['num_classes'], (3, 3), padding = 'same')(stage5d)
+    side5 = Conv2D(num_classes, (3, 3), padding = 'same')(stage5d)
     side5 = keras.layers.UpSampling2D((16, 16), name = 'side5')(side5)
-    side6 = Conv2D(config['num_classes'], (3, 3), padding = 'same')(stage6)
+    side6 = Conv2D(num_classes, (3, 3), padding = 'same')(stage6)
     side6 = keras.layers.UpSampling2D((16, 16), name = 'side6')(side6)
 
     out = Concatenate(axis = -1)([side1, side2, side3, side4, side5, side6])
-    out = Conv2D(config['num_classes'], (1, 1), padding = 'same', name = 'out', dtype='float32')(out)
+    out = Conv2D(num_classes, (1, 1), padding = 'same', name = 'out', dtype='float32')(out)
 
     # model = Model(inputs = [input], outputs = [side1, side2, side3, side4, side5, side6, out])
     model = Model(inputs = [input], outputs = [out])
@@ -576,18 +577,18 @@ def u2net(config):
 # DnCNN Model
 # ----------------------------------------------------------------------------------------------
 
-def DnCNN(config):
+def DnCNN():
     
     """
         Summary:
             Create DNCNN model object
         Arguments: 
-            Model configuration from config.yaml
+            empty
         Return:
             Keras.model object
     """
     
-    inpt = Input(shape=(config['height'], config['width'], config['in_channels']))
+    inpt = Input(shape=(height, width, in_channels))
     # 1st layer, Conv+relu
     x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='same')(inpt)
     x = Activation('relu')(x)
@@ -597,7 +598,7 @@ def DnCNN(config):
         x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
         x = Activation('relu')(x)   
     # last layer, Conv
-    x = Conv2D(config['num_classes'], (1, 1), activation='softmax',dtype='float32')(x)
+    x = Conv2D(num_classes, (1, 1), activation='softmax',dtype='float32')(x)
     # x = Conv2D(filters=6, kernel_size=(3,3), strides=(1,1), padding='same')(x)
     # x = tf.keras.layers.Subtract()([inpt, x])   # input - noise
     model = Model(inputs=inpt, outputs=x)
@@ -651,7 +652,7 @@ def vnet(config):
     keep_prob = 0.99
     features = []
     stage_num = 5 # number of blocks
-    input = Input((config['height'], config['width'], config['in_channels']))
+    input = Input((height, width, in_channels))
     x = PReLU()(BatchNormalization()(Conv2D(16, 5, activation = None, padding = 'same', kernel_initializer = 'he_normal')(input)))
     
     for s in range(1, stage_num+1):
@@ -663,7 +664,7 @@ def vnet(config):
     for d in range(stage_num-1, 0, -1):
         conv_up = up_resBlock(features[d-1], conv_up, d)
 
-    output = Conv2D(config['num_classes'], 1, activation = 'softmax', padding = 'same', kernel_initializer = 'he_normal')(conv_up)
+    output = Conv2D(num_classes, 1, activation = 'softmax', padding = 'same', kernel_initializer = 'he_normal')(conv_up)
         
     model = Model(inputs = [input], outputs = [output])
 
@@ -695,7 +696,7 @@ def unet_plus_plus(config):
             Keras.model object
     """
 
-    input = Input((config['height'], config['width'], config['in_channels']))
+    input = Input((height, width, in_channels))
 
     x00 = conv2d(filters = int(16 * 2))(input)
     x00 = BatchNormalization()(x00)
@@ -845,7 +846,7 @@ def unet_plus_plus(config):
     x04 = LeakyReLU(0.01)(x04)
     x04 = Dropout(0.2)(x04)
 
-    output = Conv2D(config['num_classes'], kernel_size = (1, 1), activation = 'softmax')(x04)
+    output = Conv2D(num_classes, kernel_size = (1, 1), activation = 'softmax')(x04)
  
     model = Model(inputs=[input], outputs=[output])
     
@@ -864,13 +865,13 @@ def kuc_vnet(config):
             Keras.model object
     """
 
-    model = kuc.vnet_2d((config['height'], config['width'], config['in_channels']), filter_num=[16, 32, 64, 128, 256], 
-                        n_labels=config['num_classes'] ,res_num_ini=1, res_num_max=3, 
+    model = kuc.vnet_2d((height, width, in_channels), filter_num=[16, 32, 64, 128, 256], 
+                        n_labels=num_classes ,res_num_ini=1, res_num_max=3, 
                         activation='PReLU', output_activation='Softmax', 
                         batch_norm=True, pool=False, unpool=False, name='vnet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -885,14 +886,14 @@ def kuc_unet3pp(config):
             Keras.model object
     """
     
-    model = kuc.unet_3plus_2d((config['height'], config['width'], config['in_channels']), 
-                                n_labels=config['num_classes'], filter_num_down=[64, 128, 256, 512], 
+    model = kuc.unet_3plus_2d((height, width, in_channels), 
+                                n_labels=num_classes, filter_num_down=[64, 128, 256, 512], 
                                 filter_num_skip='auto', filter_num_aggregate='auto', 
                                 stack_num_down=2, stack_num_up=1, activation='ReLU', output_activation='Softmax',
                                 batch_norm=True, pool='max', unpool=False, deep_supervision=True, name='unet3plus')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -907,14 +908,14 @@ def kuc_r2unet(config):
             Keras.model object
     """
 
-    model = kuc.r2_unet_2d((config['height'], config['width'], config['in_channels']), [64, 128, 256, 512], 
-                            n_labels=config['num_classes'],
+    model = kuc.r2_unet_2d((height, width, in_channels), [64, 128, 256, 512], 
+                            n_labels=num_classes,
                              stack_num_down=2, stack_num_up=1, recur_num=2,
                             activation='ReLU', output_activation='Softmax', 
                             batch_norm=True, pool='max', unpool='nearest', name='r2unet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -929,14 +930,14 @@ def kuc_unetpp(config):
             Keras.model object
     """
     
-    model = kuc.unet_plus_2d((config['height'], config['width'], config['in_channels']), [64, 128, 256, 512], 
-                            n_labels=config['num_classes'],
+    model = kuc.unet_plus_2d((height, width, in_channels), [64, 128, 256, 512], 
+                            n_labels=num_classes,
                             stack_num_down=2, stack_num_up=1, recur_num=2,
                             activation='ReLU', output_activation='Softmax', 
                             batch_norm=True, pool='max', unpool='nearest', name='r2unet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -952,14 +953,14 @@ def kuc_restunet(config):
             Keras.model object
     """
 
-    model = kuc.resunet_a_2d((config['height'], config['width'], config['in_channels']), [32, 64, 128, 256, 512, 1024], 
+    model = kuc.resunet_a_2d((height, width, in_channels), [32, 64, 128, 256, 512, 1024], 
                             dilation_num=[1, 3, 15, 31], 
-                            n_labels=config['num_classes'], aspp_num_down=256, aspp_num_up=128, 
+                            n_labels=num_classes, aspp_num_down=256, aspp_num_up=128, 
                             activation='ReLU', output_activation='Softmax', 
                             batch_norm=True, pool=False, unpool='nearest', name='resunet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -975,14 +976,14 @@ def kuc_transunet(config):
             Keras.model object
     """
     
-    model = kuc.transunet_2d((config['height'], config['width'], config['in_channels']), filter_num=[64, 128, 256, 512],
-                            n_labels=config['num_classes'], stack_num_down=2, stack_num_up=2,
+    model = kuc.transunet_2d((height, width, in_channels), filter_num=[64, 128, 256, 512],
+                            n_labels=num_classes, stack_num_down=2, stack_num_up=2,
                             embed_dim=768, num_mlp=3072, num_heads=12, num_transformer=12,
                             activation='ReLU', mlp_activation='GELU', output_activation='Softmax', 
                             batch_norm=True, pool=True, unpool='bilinear', name='transunet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -998,13 +999,13 @@ def kuc_swinnet(config):
             Keras.model object
     """
     
-    model = kuc.swin_unet_2d((config['height'], config['width'], config['in_channels']), filter_num_begin=64, 
-                            n_labels=config['num_classes'], depth=4, stack_num_down=2, stack_num_up=2, 
+    model = kuc.swin_unet_2d((height, width, in_channels), filter_num_begin=64, 
+                            n_labels=num_classes, depth=4, stack_num_down=2, stack_num_up=2, 
                             patch_size=(2, 2), num_heads=[4, 8, 8, 8], window_size=[4, 2, 2, 2], num_mlp=512, 
                             output_activation='Softmax', shift_window=True, name='swin_unet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -1020,7 +1021,7 @@ def kuc_u2net(config):
             Keras.model object
     """
     
-    model = kuc.u2net_2d((config['height'], config['width'], config['in_channels']), n_labels=config['num_classes'], 
+    model = kuc.u2net_2d((height, width, in_channels), n_labels=num_classes, 
                             filter_num_down=[64, 128, 256, 512], filter_num_up=[64, 64, 128, 256], 
                             filter_mid_num_down=[32, 32, 64, 128], filter_mid_num_up=[16, 32, 64, 128], 
                             filter_4f_num=[512, 512], filter_4f_mid_num=[256, 256], 
@@ -1028,7 +1029,7 @@ def kuc_u2net(config):
                             batch_norm=True, pool=False, unpool=False, deep_supervision=True, name='u2net')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model 
 
@@ -1045,14 +1046,14 @@ def kuc_attunet(config):
             Keras.model object
     """
   
-    model = kuc.att_unet_2d((config['height'], config['width'], config['in_channels']), [64, 128, 256, 512], 
-                            n_labels=config['num_classes'],
+    model = kuc.att_unet_2d((height, width, in_channels), [64, 128, 256, 512], 
+                            n_labels=num_classes,
                             stack_num_down=2, stack_num_up=2,
                             activation='ReLU', atten_activation='ReLU', attention='add', output_activation=None, 
                             batch_norm=True, pool=False, unpool='bilinear', name='attunet')
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -1069,12 +1070,12 @@ def sm_unet(config):
             Keras.model object
     """
 
-    model = sm.Unet(backbone_name='efficientnetb0', input_shape=(config['height'], config['width'], config['in_channels']),
-                    classes = config['num_classes'], activation='softmax',
+    model = sm.Unet(backbone_name='efficientnetb0', input_shape=(height, width, in_channels),
+                    classes = num_classes, activation='softmax',
                     encoder_weights=None, weights=None)
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -1089,12 +1090,12 @@ def sm_linknet(config):
             Keras.model object
     """
 
-    model = sm.Linknet(backbone_name='efficientnetb0', input_shape=(config['height'], config['width'], config['in_channels']),
-                    classes = config['num_classes'], activation='softmax',
+    model = sm.Linknet(backbone_name='efficientnetb0', input_shape=(height, width, in_channels),
+                    classes = num_classes, activation='softmax',
                     encoder_weights=None, weights=None)
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -1109,12 +1110,12 @@ def sm_fpn(config):
             Keras.model object
     """
 
-    model = sm.FPN(backbone_name='efficientnetb0', input_shape=(config['height'], config['width'], config['in_channels']),
-                    classes = config['num_classes'], activation='softmax',
+    model = sm.FPN(backbone_name='efficientnetb0', input_shape=(height, width, in_channels),
+                    classes = num_classes, activation='softmax',
                     encoder_weights=None, weights=None)
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -1129,12 +1130,12 @@ def sm_pspnet(config):
             Keras.model object
     """
 
-    model = sm.PSPNet(backbone_name='efficientnetb0', input_shape=(config['height'], config['width'], config['in_channels']),
-                    classes = config['num_classes'], activation='softmax', downsample_factor=8,
+    model = sm.PSPNet(backbone_name='efficientnetb0', input_shape=(height, width, in_channels),
+                    classes = num_classes, activation='softmax', downsample_factor=8,
                     encoder_weights=None, weights=None)
     x = model.layers[-2].output # fetch the last layer previous layer output
     
-    output = Conv2D(config['num_classes'], kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
+    output = Conv2D(num_classes, kernel_size = (1,1), name="out", activation = 'softmax',dtype="float32")(x) # create new last layer
     model = Model(inputs = model.input, outputs=output)
     return model
 
@@ -1168,7 +1169,7 @@ def get_model_transfer_lr(model, num_classes):
 
 def ex_mnet(config):
     #Build the model
-    inputs = Input((config['height'], config['width'], config['in_channels']))
+    inputs = Input((height, width, in_channels))
     
     #Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -1266,7 +1267,7 @@ def ex_mnet(config):
     c17 = Dropout(0.2)(c17)  # Original 0.1
     c17 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c17)
      
-    outputs = Conv2D(config['num_classes'], (1, 1), activation='softmax')(c17)
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax')(c17)
      
     model = Model(inputs=[inputs], outputs=[outputs])
     
@@ -1282,7 +1283,7 @@ def wnet(config):
         inp_size = inp_size / 2
     print(no_layer)
     encoder = {}
-    inputs = Input((config['height'], config['width'], config['in_channels']))
+    inputs = Input((height, width, in_channels))
     for i in range(no_layer):
         if i == 0:
             encoder["enc_{}_0".format(i)] = Conv2D(start_filter, (3, 3), name = "enc_{}_0".format(i),activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -1349,7 +1350,7 @@ def wnet(config):
         decoder["dec_{}_1".format(i)] = Conv2D(start_filter, (3, 3), name = "dec_{}_1".format(i), activation='relu', kernel_initializer='he_normal', padding='same')(Dropout(0.2)(decoder["dec_{}_0".format(i)]))
         start_filter = start_filter / 2
     
-    outputs = Conv2D(config['num_classes'], (1, 1), activation='softmax', dtype='float32')(decoder["dec_{}_1".format(no_layer-1)])
+    outputs = Conv2D(num_classes, (1, 1), activation='softmax', dtype='float32')(decoder["dec_{}_1".format(no_layer-1)])
     model = Model(inputs=[inputs], outputs=[outputs])
     
     return model
@@ -1600,12 +1601,12 @@ def create_vit_classifier(config):
 # Get model
 # ----------------------------------------------------------------------------------------------
 
-def get_model(config):
+def get_model():
     """
     Summary:
         create new model object for training
     Arguments:
-        config (dict): Configuration directory
+        empty
     Return:
         model (object): keras.Model class object
     """
@@ -1634,9 +1635,12 @@ def get_model(config):
               'ad_unet':ad_unet,
               "transformer":create_vit_classifier
               }
-    return models[config['model_name']](config)    
+    # return models[[model_name]](config)    
+    return models[model_name]    
+
+
 
 if __name__ == '__main__':
     
-    model = vnet()
+    model = unet()
     model.summary()
