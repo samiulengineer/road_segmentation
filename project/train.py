@@ -1,14 +1,14 @@
 import os
-import argparse
 import time
+import config
+import argparse
 from loss import *
-from model import get_model, get_model_transfer_lr
 from metrics import get_metrics
-from tensorflow import keras
-from dataset import get_train_val_dataloader
-from utils import SelectCallbacks, get_config_yaml, create_paths
-from tensorflow.keras.models import load_model
 import tensorflow_addons as tfa
+from dataset import get_train_val_dataloader
+from tensorflow.keras.models import load_model
+from model import get_model, get_model_transfer_lr
+from utils import SelectCallbacks, get_config_yaml, create_paths
 
 tf.config.optimizer.set_jit("True")
 

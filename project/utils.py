@@ -4,6 +4,7 @@ import math
 import yaml
 import random
 import pathlib
+import config
 from loss import *
 import numpy as np
 import pandas as pd
@@ -324,7 +325,7 @@ def val_show_predictions(dataset, model, config):
 # Model Output Path
 # ----------------------------------------------------------------------------------------------
 
-def create_paths(config, test=False, eval=False):
+def create_paths(config, test = False, eval = False):
     """
     Summary:
         creating paths for train and test if not exists
@@ -335,95 +336,17 @@ def create_paths(config, test=False, eval=False):
         create directories
     """
     if test:
-        pathlib.Path(config['prediction_test_dir']).mkdir(
-            parents=True, exist_ok=True)
+        pathlib.Path(prediction_test_dir).mkdir(parents=True, exist_ok=True)
     if eval:
         if config["video_path"] != 'None':
-            pathlib.Path(config["dataset_dir"] + "/video_frame").mkdir(
-                parents=True, exist_ok=True)
-        pathlib.Path(config['prediction_eval_dir']).mkdir(
-            parents=True, exist_ok=True)
+            pathlib.Path(dataset_dir / "video_frame").mkdir(parents=True, exist_ok=True)
+        pathlib.Path(prediction_eval_dir).mkdir(parents=True, exist_ok=True)
     else:
-        pathlib.Path(config['csv_log_dir']
-                     ).mkdir(parents=True, exist_ok=True)
-        pathlib.Path(config['tensorboard_log_dir']).mkdir(
-            parents=True, exist_ok=True)
-        pathlib.Path(config['checkpoint_dir']).mkdir(
-            parents=True, exist_ok=True)
-        pathlib.Path(config['prediction_val_dir']).mkdir(
-            parents=True, exist_ok=True)
+        pathlib.Path(csv_log_dir).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(tensorboard_log_dir).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(prediction_val_dir).mkdir(parents=True, exist_ok=True)
 
-# Create config path
-# ----------------------------------------------------------------------------------------------
-
-def get_config_yaml(path, args):
-    """
-    Summary:
-        parsing the config.yaml file and re organize some variables
-    Arguments:
-        path (str): config.yaml file directory
-        args (dict): dictionary of passing arguments
-    Return:
-        a dictonary
-    """
-    with open(path, "r") as f:
-        config = yaml.safe_load(f)
-
-    # Replace default values with passing values
-    for key in args.keys():
-        if args[key] != None:
-            config[key] = args[key]
-
-    if config['patchify']:
-        config['height'] = config['patch_size']
-        config['width'] = config['patch_size']
-
-    # Merge paths
-    config['train_dir'] = config['dataset_dir']+config['train_dir']
-    config['valid_dir'] = config['dataset_dir']+config['valid_dir']
-    config['test_dir'] = config['dataset_dir']+config['test_dir']
-    config['eval_dir'] = config['dataset_dir']+config['eval_dir']
-
-    config['p_train_dir'] = config['dataset_dir']+config['p_train_dir']
-    config['p_valid_dir'] = config['dataset_dir']+config['p_valid_dir']
-    config['p_test_dir'] = config['dataset_dir']+config['p_test_dir']
-    config['p_eval_dir'] = config['dataset_dir']+config['p_eval_dir']
-
-    # Create Callbacks paths
-    config['tensorboard_log_name'] = "{}_ex_{}_ep_{}_{}".format(
-        config['model_name'], config['experiment'], config['epochs'], datetime.now().strftime("%d-%b-%y"))
-    config['tensorboard_log_dir'] = config['root_dir'] + \
-        '/logs/' + \
-        config['model_name']+'/'  
-
-    config['csv_log_name'] = "{}_ex_{}_ep_{}_{}.csv".format(
-        config['model_name'], config['experiment'], config['epochs'], datetime.now().strftime("%d-%b-%y"))
-    config['csv_log_dir'] = config['root_dir'] + \
-        '/csv_logger/' + \
-        config['model_name']+'/'   
-
-    config['checkpoint_name'] = "{}_ex_{}_ep_{}_{}.hdf5".format(
-        config['model_name'], config['experiment'], config['epochs'], datetime.now().strftime("%d-%b-%y"))
-    config['checkpoint_dir'] = config['root_dir'] + \
-        '/model/' + \
-        config['model_name']+'/'   
-
-    # Create save model directory
-    if config['load_model_dir'] == 'None':
-        config['load_model_dir'] = config['root_dir'] + \
-            '/model/' + \
-            config['model_name']+'/'  
-
-    # Create Evaluation directory
-    config['prediction_test_dir'] = config['root_dir'] + '/prediction/'+ config['model_name'] + '/test/' + config['experiment'] + '/'
-    config['prediction_eval_dir'] = config['root_dir'] + '/prediction/'+ config['model_name'] + '/eval/' + config['experiment'] + '/'
-    config['prediction_val_dir'] = config['root_dir'] + '/prediction/' + config['model_name'] + '/validation/' + config['experiment'] + '/'
-
-    config['visualization_dir'] = config['root_dir']+'/visualization/'
-
-    return config
-    
-    
 def frame_to_video(config, fname, fps=30):
     """
     Summary:
@@ -443,22 +366,3 @@ def frame_to_video(config, fname, fps=30):
         image_files.append(image_folder + "/" + i)
     clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
     clip.write_videofile(fname)
-
-
-# def video_to_frame(config):
-#     """
-#     Summary:
-#         create frames from video
-#     Arguments:
-#         config (dict): configuration dictionary
-#     Return:
-#         frames
-#     """
-    
-#     vidcap = cv2.VideoCapture(config["video_path"])
-#     success,image = vidcap.read()
-#     count = 0
-#     while success:
-#         cv2.imwrite(config['dataset_dir'] + '/video_frame' + '/frame_%06d.jpg' % count, image)     # save frame as JPEG file      
-#         success,image = vidcap.read() 
-#         count += 1
